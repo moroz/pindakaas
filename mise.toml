@@ -1,0 +1,17 @@
+[tools]
+go = "1.26.4"
+"go:github.com/air-verse/air" = "latest"
+
+[tasks."server:keygen"]
+run = """
+#!/usr/bin/env -S bash -euo pipefail
+
+if [[ ! -f "$SERVER_KEY" ]]; then
+  ssh-keygen -t ed25519 -f $SERVER_KEY -N ""
+else
+  echo "$SERVER_KEY exists, skipping..."
+fi
+"""
+
+[env]
+SERVER_KEY = "./priv/id_ed25519"
