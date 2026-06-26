@@ -22,9 +22,14 @@ func main() {
 		return server.Serve()
 	})
 
+	server := httpserver.New(ctx, config.BaseDomain)
+
 	g.Go(func() error {
-		server := httpserver.New(ctx, config.HTTPPort)
-		return server.Serve()
+		return server.ListenAndServe(config.HTTPPort)
+	})
+
+	g.Go(func() error {
+		return server.ListenAndServeTLS(config.HTTPSPort, config.TLSCertFile, config.TLSKeyFile)
 	})
 
 	if err := g.Wait(); err != nil {

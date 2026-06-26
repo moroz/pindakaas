@@ -1,5 +1,5 @@
 priv/*
 tmp/
 rel/
-dev.db
+*.db
 !priv/.keep
