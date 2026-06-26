@@ -1,6 +1,7 @@
 package sshserver
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -13,11 +14,12 @@ import (
 )
 
 type SSHServer struct {
+	Context      context.Context
 	Port         uint16
 	ServerConfig *ssh.ServerConfig
 }
 
-func New(port uint16) (*SSHServer, error) {
+func New(ctx context.Context, port uint16) (*SSHServer, error) {
 	algorithms := ssh.SupportedAlgorithms()
 
 	serverConfig := &ssh.ServerConfig{
@@ -46,13 +48,13 @@ func New(port uint16) (*SSHServer, error) {
 	serverConfig.AddHostKey(private)
 
 	return &SSHServer{
+		Context:      ctx,
 		Port:         port,
 		ServerConfig: serverConfig,
 	}, nil
 }
 
 func (s *SSHServer) Serve() error {
-
 	listener, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", strconv.Itoa(int(s.Port))))
 	if err != nil {
 		return fmt.Errorf("Failed to bind on port %v: %w", s.Port, err)
@@ -60,17 +62,25 @@ func (s *SSHServer) Serve() error {
 
 	log.Printf("SSH server listening on %s", listener.Addr())
 
+	go func() {
+		<-s.Context.Done()
+		listener.Close()
+	}()
+
 	for {
-		go s.handleConn(listener.Accept())
+		conn, err := listener.Accept()
+		if err != nil {
+			if s.Context.Err() != nil {
+				return nil
+			}
+			log.Print("Failed to accept incoming connection: ", err)
+			continue
+		}
+		go s.handleConn(conn)
 	}
 }
 
-func (s *SSHServer) handleConn(newConnection net.Conn, err error) {
-	if err != nil {
-		log.Print("Failed to accept incoming connection: ", err)
-		return
-	}
-
+func (s *SSHServer) handleConn(newConnection net.Conn) {
 	conn, chans, reqs, err := ssh.NewServerConn(newConnection, s.ServerConfig)
 	if err != nil {
 		log.Print("SSH handshake failed: ", err)
