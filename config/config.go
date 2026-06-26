@@ -21,4 +21,4 @@ func GetenvWithDefault(name, defaultValue string) string {
 	return val
 }
 
-var ServerKeyPath = MustGetenv("SERVER_KEY")
+var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_PATH")

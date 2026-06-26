@@ -35,7 +35,7 @@ func New(ctx context.Context, port uint16) (*SSHServer, error) {
 		},
 	}
 
-	privateBytes, err := os.ReadFile(config.ServerKeyPath)
+	privateBytes, err := os.ReadFile(config.SSHServerKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("SSHServer.Serve: Failed to load private key: %w", err)
 	}
