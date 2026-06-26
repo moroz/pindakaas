@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 )
 
 func MustGetenv(name string) string {
@@ -21,4 +22,16 @@ func GetenvWithDefault(name, defaultValue string) string {
 	return val
 }
 
+func MustParsePortNumber(val string) uint16 {
+	parsed, err := strconv.ParseInt(val, 10, 16)
+	if err != nil {
+		log.Fatalf(`FATAL: Failed to parse port number from string "%c"`, val)
+	}
+	return uint16(parsed)
+}
+
 var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_PATH")
+
+var SSHPort = MustParsePortNumber(GetenvWithDefault("SSH_PORT", "2137"))
+var HTTPPort = MustParsePortNumber(GetenvWithDefault("HTTP_PORT", "8080"))
+var HTTPSPort = MustParsePortNumber(GetenvWithDefault("HTTPS_PORT", "8081"))

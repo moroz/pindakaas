@@ -1,5 +1,5 @@
-!priv/.keep
-priv/
+priv/*
 tmp/
 rel/
 dev.db
+!priv/.keep
