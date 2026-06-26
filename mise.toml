@@ -1,6 +1,7 @@
 [tools]
 go = "1.26.4"
 "go:github.com/air-verse/air" = "latest"
+"go:github.com/pressly/goose/v3/cmd/goose" = "v3.27.1"
 
 [tasks."server:keygen"]
 run = """
@@ -15,3 +16,10 @@ fi
 
 [env]
 SERVER_KEY = "./priv/id_ed25519"
+GOOSE_MIGRATION_DIR = "db/migrations"
+GOOSE_DBSTRING = "./dev.db"
+GOOSE_DRIVER = "sqlite3"
+
+[tasks.deploy]
+dir = "{{ config_root }}/deploy"
+run = "ansible-playbook -v deploy.yml"

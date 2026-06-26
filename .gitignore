@@ -2,3 +2,4 @@
 priv/
 tmp/
 rel/
+dev.db
