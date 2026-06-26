@@ -4,6 +4,7 @@ go = "1.26.4"
 "go:filippo.io/mkcert" = "v1.4.4"
 "go:github.com/air-verse/air" = "latest"
 "go:github.com/pressly/goose/v3/cmd/goose" = "v3.27.1"
+"go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
 sqlite = "latest"
 
 [env]
@@ -26,6 +27,9 @@ run = "ansible-playbook -v deploy.yml"
 
 [tasks."db:setup"]
 run = "goose up"
+
+[tasks."db:seed"]
+run = "sqlite3 $DATABASE_URL < db/seeds.sql"
 
 [tasks."keygen.ssh"]
 run = """

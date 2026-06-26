@@ -6,20 +6,23 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"sync"
+	"time"
 
 	"github.com/moroz/pindakaas/config"
+	"github.com/moroz/pindakaas/db/queries"
+	"github.com/moroz/pindakaas/registry"
+	"github.com/moroz/pindakaas/services"
 	"golang.org/x/crypto/ssh"
 )
 
 type SSHServer struct {
-	Context      context.Context
-	Port         uint16
-	ServerConfig *ssh.ServerConfig
+	serverConfig *ssh.ServerConfig
+	hostService  *services.HostService
+	connRegistry *registry.Registry
 }
 
-func New(ctx context.Context, port uint16) (*SSHServer, error) {
+func New(db queries.DBTX, connRegistry *registry.Registry) (*SSHServer, error) {
 	algorithms := ssh.SupportedAlgorithms()
 
 	serverConfig := &ssh.ServerConfig{
@@ -29,10 +32,6 @@ func New(ctx context.Context, port uint16) (*SSHServer, error) {
 			Ciphers:      algorithms.Ciphers,
 		},
 		NoClientAuth: true,
-		NoClientAuthCallback: func(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
-			log.Printf("%+v", conn)
-			return &ssh.Permissions{}, nil
-		},
 	}
 
 	privateBytes, err := os.ReadFile(config.SSHServerKeyPath)
@@ -47,30 +46,35 @@ func New(ctx context.Context, port uint16) (*SSHServer, error) {
 
 	serverConfig.AddHostKey(private)
 
-	return &SSHServer{
-		Context:      ctx,
-		Port:         port,
-		ServerConfig: serverConfig,
-	}, nil
+	server := &SSHServer{
+		serverConfig: serverConfig,
+		hostService:  services.NewHostService(db),
+		connRegistry: connRegistry,
+	}
+
+	serverConfig.NoClientAuthCallback = server.authenticateConnection
+
+	return server, nil
 }
 
-func (s *SSHServer) Serve() error {
-	listener, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", strconv.Itoa(int(s.Port))))
+func (s *SSHServer) Serve(ctx context.Context, port uint16) error {
+	listenOn := config.FormatHostPort(port)
+	listener, err := net.Listen("tcp", listenOn)
 	if err != nil {
-		return fmt.Errorf("Failed to bind on port %v: %w", s.Port, err)
+		return fmt.Errorf("Failed to bind on port %v: %w", port, err)
 	}
 
 	log.Printf("SSH server listening on %s", listener.Addr())
 
 	go func() {
-		<-s.Context.Done()
+		<-ctx.Done()
 		listener.Close()
 	}()
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			if s.Context.Err() != nil {
+			if ctx.Err() != nil {
 				return nil
 			}
 			log.Print("Failed to accept incoming connection: ", err)
@@ -81,12 +85,19 @@ func (s *SSHServer) Serve() error {
 }
 
 func (s *SSHServer) handleConn(newConnection net.Conn) {
-	conn, chans, reqs, err := ssh.NewServerConn(newConnection, s.ServerConfig)
+	conn, chans, reqs, err := ssh.NewServerConn(newConnection, s.serverConfig)
 	if err != nil {
 		log.Print("SSH handshake failed: ", err)
 		return
 	}
 	defer conn.Close()
+
+	host := conn.Permissions.ExtraData["host"].(*queries.Host)
+	if _, err := s.connRegistry.RegisterConnection(host.Subdomain, conn); err != nil {
+		log.Print("Failed to register connection: ", err)
+		return
+	}
+	defer s.connRegistry.DeregisterConnection(host.Subdomain)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -130,4 +141,20 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 	wg.Wait()
 
 	log.Printf("Connection closed")
+}
+
+func (s *SSHServer) authenticateConnection(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	host, err := s.hostService.AuthenticateHostBySSHUsername(ctx, conn.User())
+	if err != nil {
+		return nil, err
+	}
+
+	return &ssh.Permissions{
+		ExtraData: map[any]any{
+			"host": host,
+		},
+	}, nil
 }

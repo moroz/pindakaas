@@ -7,19 +7,19 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/moroz/pindakaas/config"
+	"github.com/moroz/pindakaas/registry"
 )
 
 type HTTPServer struct {
-	Context    context.Context
-	BaseDomain string
+	connRegistry *registry.Registry
 }
 
-func New(ctx context.Context, baseDomain string) *HTTPServer {
+func New(connRegistry *registry.Registry) *HTTPServer {
 	return &HTTPServer{
-		Context:    ctx,
-		BaseDomain: baseDomain,
+		connRegistry: connRegistry,
 	}
 }
 
@@ -27,6 +27,14 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		subdomain, _, _ := strings.Cut(r.Host, ".")
+		conn, ok := s.connRegistry.GetConnectionForSubdomain(subdomain)
+		if !ok {
+			http.Error(w, "Bad Gateway", http.StatusBadGateway)
+			return
+		}
+		_ = conn
+
 		slog.Info("Handling incoming request", "method", r.Method, "path", r.URL.Path)
 		fmt.Fprintf(w, "Hello!")
 	})
@@ -34,7 +42,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.ServeHTTP(w, r)
 }
 
-func (s *HTTPServer) ListenAndServe(port uint16) error {
+func (s *HTTPServer) ListenAndServe(ctx context.Context, port uint16) error {
 	listenOn := config.FormatHostPort(port)
 	listener, err := net.Listen("tcp", listenOn)
 	if err != nil {
@@ -44,14 +52,14 @@ func (s *HTTPServer) ListenAndServe(port uint16) error {
 	log.Printf("HTTP server listening on %s", listener.Addr())
 
 	go func() {
-		<-s.Context.Done()
+		<-ctx.Done()
 		listener.Close()
 	}()
 
 	return http.Serve(listener, s)
 }
 
-func (s *HTTPServer) ListenAndServeTLS(port uint16, certFile, keyFile string) error {
+func (s *HTTPServer) ListenAndServeTLS(ctx context.Context, port uint16, certFile, keyFile string) error {
 	listenOn := config.FormatHostPort(port)
 	listener, err := net.Listen("tcp", listenOn)
 	if err != nil {
@@ -61,7 +69,7 @@ func (s *HTTPServer) ListenAndServeTLS(port uint16, certFile, keyFile string) er
 	log.Printf("HTTPS server listening on %s", listener.Addr())
 
 	go func() {
-		<-s.Context.Done()
+		<-ctx.Done()
 		listener.Close()
 	}()
 

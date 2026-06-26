@@ -45,3 +45,4 @@ var TLSCertFile = MustGetenv("TLS_CERT_FILE")
 var TLSKeyFile = MustGetenv("TLS_KEY_FILE")
 
 var BaseDomain = GetenvWithDefault("BASE_DOMAIN", "")
+var DatabaseUrl = MustGetenv("DATABASE_URL")
