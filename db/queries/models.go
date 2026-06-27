@@ -6,7 +6,7 @@ package queries
 
 import (
 	uuid "github.com/google/uuid"
-	"github.com/moroz/pindakaas/internal/dbtypes"
+	"github.com/moroz/pindakaas/types"
 )
 
 type Host struct {
@@ -14,6 +14,6 @@ type Host struct {
 	Subdomain    string
 	Username     string
 	PasswordHash string
-	InsertedAt   dbtypes.UnixTimestamp
-	UpdatedAt    dbtypes.UnixTimestamp
+	InsertedAt   types.UnixTimestamp
+	UpdatedAt    types.UnixTimestamp
 }

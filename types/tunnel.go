@@ -1,6 +1,10 @@
 package types
 
-import "golang.org/x/crypto/ssh"
+import (
+	"net/http"
+
+	"golang.org/x/crypto/ssh"
+)
 
 type RequestPortForwardingPayload struct {
 	BindAddr string
@@ -25,12 +29,21 @@ type Tunnel struct {
 	AllocatedPort uint32
 }
 
-func (t *Tunnel) OpenForwardingChannel(originAddr string, originPort uint32) (ssh.Channel, <-chan *ssh.Request, error) {
+var (
+	_ http.RoundTripper = &Tunnel{}
+)
+
+func (t *Tunnel) OpenForwardingChannel(originAddr string, originPort uint32) (ForwardedConn, <-chan *ssh.Request, error) {
 	payload := ssh.Marshal(OpenForwardingChannelPayload{
 		RemoteAddr: t.BindAddr,
 		RemotePort: t.AllocatedPort,
 		OriginAddr: originAddr,
 		OriginPort: originPort,
 	})
-	return t.Conn.OpenChannel("forwarded-tcpip", payload)
+	conn, reqs, err := t.Conn.OpenChannel("forwarded-tcpip", payload)
+	return ForwardedConn{conn}, reqs, err
+}
+
+func (t *Tunnel) RoundTrip(*http.Request) (*http.Response, error) {
+	channel, err := t.OpenForwardingChannel()
 }

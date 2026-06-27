@@ -20,11 +20,11 @@ sql:
 
           - db_type: "timestamp"
             go_type:
-              import: "github.com/moroz/pindakaas/internal/dbtypes"
+              import: "github.com/moroz/pindakaas/types"
               type: "UnixTimestamp"
           - db_type: "timestamp"
             nullable: true
             go_type:
               pointer: true
-              import: "github.com/moroz/pindakaas/internal/dbtypes"
+              import: "github.com/moroz/pindakaas/types"
               type: "UnixTimestamp"
