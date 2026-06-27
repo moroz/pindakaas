@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"golang.org/x/crypto/ssh"
+	"github.com/moroz/pindakaas/types"
 )
 
 type Registry struct {
@@ -16,13 +16,13 @@ func New() *Registry {
 	return &Registry{}
 }
 
-func (r *Registry) RegisterConnection(subdomain string, conn *ssh.ServerConn) (bool, error) {
+func (r *Registry) RegisterConnection(subdomain string, tunnel *types.Tunnel) (bool, error) {
 	if _, ok := r.connections.Load(subdomain); ok {
 		return false, fmt.Errorf("subdomain is already in use")
 	}
 
-	r.connections.Store(subdomain, conn)
-	slog.Info("Registered connection", "subdomain", subdomain)
+	r.connections.Store(subdomain, tunnel)
+	slog.Info("Registered connection", "subdomain", subdomain, "bind_addr", tunnel.BindAddr, "bind_port", tunnel.BindPort)
 
 	return true, nil
 }
@@ -31,10 +31,10 @@ func (r *Registry) DeregisterConnection(subdomain string) {
 	r.connections.Delete(subdomain)
 }
 
-func (r *Registry) GetConnectionForSubdomain(subdomain string) (*ssh.ServerConn, bool) {
-	conn, ok := r.connections.Load(subdomain)
+func (r *Registry) GetTunnelForSubdomain(subdomain string) (*types.Tunnel, bool) {
+	tunnel, ok := r.connections.Load(subdomain)
 	if !ok {
 		return nil, false
 	}
-	return conn.(*ssh.ServerConn), ok
+	return tunnel.(*types.Tunnel), ok
 }

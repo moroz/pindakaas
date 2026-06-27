@@ -24,8 +24,8 @@ func GetenvWithDefault(name, defaultValue string) string {
 }
 
 func MustParsePortNumber(val string) uint16 {
-	parsed, err := strconv.ParseInt(val, 10, 64)
-	if err != nil || parsed > 65535 {
+	parsed, err := strconv.ParseUint(val, 10, 16)
+	if err != nil {
 		log.Fatalf(`FATAL: Failed to parse port number from string "%v"`, val)
 	}
 	return uint16(parsed)

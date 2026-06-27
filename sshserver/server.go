@@ -13,6 +13,7 @@ import (
 	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/registry"
 	"github.com/moroz/pindakaas/services"
+	"github.com/moroz/pindakaas/types"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -93,11 +94,6 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 	defer conn.Close()
 
 	host := conn.Permissions.ExtraData["host"].(*queries.Host)
-	if _, err := s.connRegistry.RegisterConnection(host.Subdomain, conn); err != nil {
-		log.Print("Failed to register connection: ", err)
-		return
-	}
-	defer s.connRegistry.DeregisterConnection(host.Subdomain)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -110,10 +106,7 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 				continue
 			}
 
-			var request struct {
-				BindAddr string
-				BindPort uint32
-			}
+			var request types.RequestPortForwardingPayload
 
 			err := ssh.Unmarshal(req.Payload, &request)
 			if err != nil {
@@ -122,16 +115,28 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 
 			log.Printf("Forwarding request: %v", request)
 
-			response := ssh.Marshal(struct{ Port uint32 }{0})
+			tunnel := &types.Tunnel{
+				Conn:          conn,
+				BindAddr:      request.BindAddr,
+				BindPort:      request.BindPort,
+				AllocatedPort: 42069,
+			}
+			if _, err := s.connRegistry.RegisterConnection(host.Subdomain, tunnel); err != nil {
+				log.Print("Failed to register tunnel: ", err)
+				break
+			}
+			defer s.connRegistry.DeregisterConnection(host.Subdomain)
+
+			response := ssh.Marshal(types.RequestPortForwardingSuccessPayload{BindPort: tunnel.AllocatedPort})
 			req.Reply(true, response)
 		}
 
 		wg.Done()
 	}()
 
+	// Reject all channels for now
 	go func() {
 		for newChan := range chans {
-			log.Printf("Channel type: %s", newChan.ChannelType())
 			newChan.Reject(ssh.UnknownChannelType, "")
 		}
 

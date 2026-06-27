@@ -1,4 +1,5 @@
 -- +goose Up
+-- TODO: Rename `hosts` to `tunnels`
 create table hosts (
   id uuid not null primary key,
   subdomain text not null unique,
