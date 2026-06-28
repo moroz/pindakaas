@@ -85,7 +85,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		for key, values := range resp.Header {
 			for _, value := range values {
-				resp.Header.Add(key, value)
+				w.Header().Add(key, value)
 			}
 		}
 		w.WriteHeader(resp.StatusCode)

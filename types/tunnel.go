@@ -1,7 +1,11 @@
 package types
 
 import (
+	"bufio"
+	"io"
+	"net"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -44,6 +48,56 @@ func (t *Tunnel) OpenForwardingChannel(originAddr string, originPort uint32) (Fo
 	return ForwardedConn{conn}, reqs, err
 }
 
-func (t *Tunnel) RoundTrip(*http.Request) (*http.Response, error) {
-	channel, err := t.OpenForwardingChannel()
+func parseRemoteAddrPort(addr string) (string, uint32, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", 0, err
+	}
+
+	parsedPort, err := strconv.ParseUint(port, 10, 32)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return host, uint32(parsedPort), nil
+}
+
+type ForwardedResponse struct {
+	io.ReadCloser
+	channel ssh.Channel
+}
+
+func (r *ForwardedResponse) Close() error {
+	err := r.ReadCloser.Close()
+	r.channel.Close()
+	return err
+}
+
+func (t *Tunnel) RoundTrip(r *http.Request) (*http.Response, error) {
+	host, port, err := parseRemoteAddrPort(r.RemoteAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, _, err := t.OpenForwardingChannel(host, port)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Write(channel)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.ReadResponse(bufio.NewReader(channel), r)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Body = &ForwardedResponse{
+		ReadCloser: resp.Body,
+		channel:    channel,
+	}
+
+	return resp, nil
 }
