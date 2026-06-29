@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"log/slog"
@@ -12,63 +13,62 @@ import (
 	"strings"
 
 	"github.com/moroz/pindakaas/config"
+	"github.com/moroz/pindakaas/handlers"
 	"github.com/moroz/pindakaas/registry"
 )
 
 type HTTPServer struct {
 	connRegistry *registry.Registry
+	adminRouter  http.Handler
 }
 
-func New(connRegistry *registry.Registry) *HTTPServer {
+type HTTPServerProps struct {
+	ConnRegistry *registry.Registry
+	DB           *sql.DB
+}
+
+func New(props *HTTPServerProps) *HTTPServer {
 	return &HTTPServer{
-		connRegistry: connRegistry,
+		connRegistry: props.ConnRegistry,
+		adminRouter:  handlers.Router(props.DB),
 	}
-}
-
-func parseRemoteAddrPort(addr string) (string, uint32, error) {
-	host, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		return "", 0, err
-	}
-
-	parsedPort, err := strconv.ParseUint(port, 10, 32)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return host, uint32(parsedPort), nil
 }
 
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	mux := http.NewServeMux()
+	host, _, _ := net.SplitHostPort(r.Host)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("Handling incoming request", "method", r.Method, "path", r.URL.Path, "host", r.Host)
+	switch host {
+	case config.BaseDomain:
+		s.adminRouter.ServeHTTP(w, r)
+	default:
+		s.ServeReverseProxy(w, r)
+	}
+}
 
-		subdomain, _, found := strings.Cut(r.Host, ".")
-		if !found {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
+func (s *HTTPServer) ServeReverseProxy(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Handling incoming request", "method", r.Method, "path", r.URL.Path, "host", r.Host)
 
-		conn, ok := s.connRegistry.GetTunnelForSubdomain(subdomain)
-		if !ok {
-			http.Error(w, "Bad Gateway", http.StatusBadGateway)
-			return
-		}
+	subdomain, _, found := strings.Cut(r.Host, ".")
+	if !found {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
-		proxy := &httputil.ReverseProxy{
-			Transport: conn,
-			Rewrite: func(pr *httputil.ProxyRequest) {
-				addr := net.JoinHostPort(conn.BindAddr, strconv.Itoa(int(conn.BindPort)))
-				pr.Out.Host = addr
-			},
-		}
+	conn, ok := s.connRegistry.GetTunnelForSubdomain(subdomain)
+	if !ok {
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		return
+	}
 
-		proxy.ServeHTTP(w, r)
-	})
+	proxy := &httputil.ReverseProxy{
+		Transport: conn,
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			addr := net.JoinHostPort(conn.BindAddr, strconv.Itoa(int(conn.BindPort)))
+			pr.Out.Host = addr
+		},
+	}
 
-	mux.ServeHTTP(w, r)
+	proxy.ServeHTTP(w, r)
 }
 
 func (s *HTTPServer) ListenAndServe(ctx context.Context, port uint16) error {

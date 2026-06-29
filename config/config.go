@@ -1,10 +1,15 @@
 package config
 
 import (
+	"crypto/sha512"
+	"encoding/base64"
+	"io"
 	"log"
 	"net"
 	"os"
 	"strconv"
+
+	"golang.org/x/crypto/hkdf"
 )
 
 func MustGetenv(name string) string {
@@ -13,6 +18,15 @@ func MustGetenv(name string) string {
 		log.Fatalf("FATAL: Environment variable %s is not set!", name)
 	}
 	return val
+}
+
+func MustGetenvBase64(name string) []byte {
+	val := MustGetenv(name)
+	binary, err := base64.StdEncoding.DecodeString(val)
+	if err != nil {
+		log.Fatalf("FATAL: Failed to decode environment variable %s as Base64!", name)
+	}
+	return binary
 }
 
 func GetenvWithDefault(name, defaultValue string) string {
@@ -31,6 +45,15 @@ func MustParsePortNumber(val string) uint16 {
 	return uint16(parsed)
 }
 
+func MustDeriveKey(base []byte, info string, lengthInBytes int) []byte {
+	kdf := hkdf.New(sha512.New, base, nil, []byte(info))
+	buf := make([]byte, lengthInBytes)
+	if _, err := io.ReadFull(kdf, buf); err != nil {
+		log.Fatalf("Failed to derive key (info: %s): %s", info, err)
+	}
+	return buf
+}
+
 func FormatHostPort(port uint16) string {
 	return net.JoinHostPort("0.0.0.0", strconv.Itoa(int(port)))
 }
@@ -46,3 +69,4 @@ var TLSKeyFile = MustGetenv("TLS_KEY_FILE")
 
 var BaseDomain = GetenvWithDefault("BASE_DOMAIN", "")
 var DatabaseUrl = MustGetenv("DATABASE_URL")
+var SecretKeyBase = MustGetenv()

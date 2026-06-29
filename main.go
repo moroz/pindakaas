@@ -34,7 +34,10 @@ func main() {
 		return server.Serve(ctx, config.SSHPort)
 	})
 
-	server := httpserver.New(reg)
+	server := httpserver.New(&httpserver.HTTPServerProps{
+		ConnRegistry: reg,
+		DB:           db,
+	})
 
 	g.Go(func() error {
 		return server.ListenAndServe(ctx, config.HTTPPort)
