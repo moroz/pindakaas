@@ -93,7 +93,7 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 	}
 	defer conn.Close()
 
-	host := conn.Permissions.ExtraData["host"].(*queries.Host)
+	host := conn.Permissions.ExtraData["host"].(*queries.Tunnel)
 
 	var wg sync.WaitGroup
 	wg.Add(2)

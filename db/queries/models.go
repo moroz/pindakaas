@@ -6,14 +6,31 @@ package queries
 
 import (
 	uuid "github.com/google/uuid"
-	"github.com/moroz/pindakaas/types"
+	"github.com/moroz/pindakaas/types/dbtypes"
 )
 
-type Host struct {
+type Tunnel struct {
 	ID           uuid.UUID
 	Subdomain    string
 	Username     string
 	PasswordHash string
-	InsertedAt   types.UnixTimestamp
-	UpdatedAt    types.UnixTimestamp
+	InsertedAt   dbtypes.UnixTimestamp
+	UpdatedAt    dbtypes.UnixTimestamp
+	UserID       uuid.UUID
+}
+
+type User struct {
+	ID         uuid.UUID
+	Email      string
+	UserRole   interface{}
+	InsertedAt dbtypes.UnixTimestamp
+	UpdatedAt  dbtypes.UnixTimestamp
+}
+
+type UserToken struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	Token      []byte
+	Context    dbtypes.UserTokenContext
+	InsertedAt dbtypes.UnixTimestamp
 }

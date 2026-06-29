@@ -58,9 +58,18 @@ func FormatHostPort(port uint16) string {
 	return net.JoinHostPort("0.0.0.0", strconv.Itoa(int(port)))
 }
 
-var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_FILE")
+func RequireInProduction(name string, defaultValue string) string {
+	if IsProd {
+		return MustGetenv(name)
+	}
+	return GetenvWithDefault(name, defaultValue)
+}
 
+var IsProd = os.Getenv("GO_ENV") == "prod"
+
+var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_FILE")
 var SSHPort = MustParsePortNumber(GetenvWithDefault("SSH_PORT", "42069"))
+
 var HTTPPort = MustParsePortNumber(GetenvWithDefault("HTTP_PORT", "8080"))
 var HTTPSPort = MustParsePortNumber(GetenvWithDefault("HTTPS_PORT", "8081"))
 
@@ -69,4 +78,11 @@ var TLSKeyFile = MustGetenv("TLS_KEY_FILE")
 
 var BaseDomain = GetenvWithDefault("BASE_DOMAIN", "")
 var DatabaseUrl = MustGetenv("DATABASE_URL")
-var SecretKeyBase = MustGetenv()
+var SecretKeyBase = MustGetenvBase64("SECRET_KEY_BASE")
+
+var SessionKey = MustDeriveKey(SecretKeyBase, "Sessions", 32)
+var DatabaseHMACKey = MustDeriveKey(SecretKeyBase, "DatabaseHMAC", 32)
+
+var GoogleClientId = RequireInProduction("GOOGLE_CLIENT_ID", "")
+var GoogleClientSecret = RequireInProduction("GOOGLE_CLIENT_SECRET", "")
+var PublicUrl = RequireInProduction("PUBLIC_URL", "http://localhost:8080")

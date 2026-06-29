@@ -13,8 +13,9 @@ import (
 	"strings"
 
 	"github.com/moroz/pindakaas/config"
-	"github.com/moroz/pindakaas/handlers"
 	"github.com/moroz/pindakaas/registry"
+	"github.com/moroz/pindakaas/web/handlers"
+	"github.com/moroz/pindakaas/web/sessions"
 )
 
 type HTTPServer struct {
@@ -25,12 +26,13 @@ type HTTPServer struct {
 type HTTPServerProps struct {
 	ConnRegistry *registry.Registry
 	DB           *sql.DB
+	SessionStore *sessions.Store
 }
 
 func New(props *HTTPServerProps) *HTTPServer {
 	return &HTTPServer{
 		connRegistry: props.ConnRegistry,
-		adminRouter:  handlers.Router(props.DB),
+		adminRouter:  handlers.Router(props.DB, props.SessionStore),
 	}
 }
 
@@ -38,7 +40,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host, _, _ := net.SplitHostPort(r.Host)
 
 	switch host {
-	case config.BaseDomain:
+	case config.BaseDomain, "localhost":
 		s.adminRouter.ServeHTTP(w, r)
 	default:
 		s.ServeReverseProxy(w, r)

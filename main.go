@@ -9,6 +9,7 @@ import (
 	"github.com/moroz/pindakaas/httpserver"
 	"github.com/moroz/pindakaas/registry"
 	"github.com/moroz/pindakaas/sshserver"
+	"github.com/moroz/pindakaas/web/sessions"
 	"golang.org/x/sync/errgroup"
 
 	_ "modernc.org/sqlite"
@@ -22,6 +23,10 @@ func main() {
 	defer db.Close()
 
 	reg := registry.New()
+	sessionStore, err := sessions.NewStore(config.SessionKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	g, ctx := errgroup.WithContext(context.Background())
 
@@ -37,6 +42,7 @@ func main() {
 	server := httpserver.New(&httpserver.HTTPServerProps{
 		ConnRegistry: reg,
 		DB:           db,
+		SessionStore: sessionStore,
 	})
 
 	g.Go(func() error {

@@ -17,13 +17,13 @@ func NewHostService(db queries.DBTX) *HostService {
 	return &HostService{db}
 }
 
-func (s *HostService) AuthenticateHostBySSHUsername(ctx context.Context, userString string) (*queries.Host, error) {
+func (s *HostService) AuthenticateHostBySSHUsername(ctx context.Context, userString string) (*queries.Tunnel, error) {
 	username, password, found := strings.Cut(userString, ":")
 	if !found {
 		return nil, fmt.Errorf("malformed username")
 	}
 
-	host, err := queries.New(s.db).GetHostByUsername(ctx, username)
+	host, err := queries.New(s.db).GetTunnelByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}

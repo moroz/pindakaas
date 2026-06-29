@@ -20,11 +20,16 @@ sql:
 
           - db_type: "timestamp"
             go_type:
-              import: "github.com/moroz/pindakaas/types"
+              import: "github.com/moroz/pindakaas/types/dbtypes"
               type: "UnixTimestamp"
           - db_type: "timestamp"
             nullable: true
             go_type:
               pointer: true
-              import: "github.com/moroz/pindakaas/types"
+              import: "github.com/moroz/pindakaas/types/dbtypes"
               type: "UnixTimestamp"
+
+          - db_type: "user_token_context"
+            go_type:
+              import: "github.com/moroz/pindakaas/types/dbtypes"
+              type: "UserTokenContext"
