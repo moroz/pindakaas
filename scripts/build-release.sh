@@ -9,11 +9,13 @@ cd $gitroot
 rm -rf rel
 mkdir rel
 cd $gitroot
-go build -a -installsuffix cgo -o rel/server -tags PROD .
+go build -a -installsuffix cgo -o rel/server .
 cp -R $gitroot/db/migrations rel/
 
-# Remove hidden sql files, if any
-rm $gitroot/db/migrations/._* || true
+TAR_OPTS="--no-xattrs"
 
-cd rel && tar czf release.tar.gz server migrations/
+if [[ "$(uname)" = "Darwin" ]]; then
+  TAR_OPTS="--no-xattrs --no-mac-metadata"
+fi
 
+cd rel && tar czf release.tar.gz $TAR_OPTS server assets/ migrations/

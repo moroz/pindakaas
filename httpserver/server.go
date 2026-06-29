@@ -59,7 +59,9 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		proxy := &httputil.ReverseProxy{
 			Transport: conn,
-			Rewrite:   func(pr *httputil.ProxyRequest) {},
+			Rewrite: func(pr *httputil.ProxyRequest) {
+				pr.Out.Host = conn.BindAddr
+			},
 		}
 
 		proxy.ServeHTTP(w, r)
