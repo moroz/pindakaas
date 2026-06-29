@@ -21,9 +21,6 @@ TZ = "UTC"
 [tasks.setup]
 depends = ["keygen", "db:setup"]
 
-[tasks.deploy]
-dir = "{{ config_root }}/deploy"
-run = "ansible-playbook -v deploy.yml"
 
 [tasks."db:setup"]
 run = "goose up"

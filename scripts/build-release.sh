@@ -18,4 +18,4 @@ if [[ "$(uname)" = "Darwin" ]]; then
   TAR_OPTS="--no-xattrs --no-mac-metadata"
 fi
 
-cd rel && tar czf release.tar.gz $TAR_OPTS server assets/ migrations/
+cd rel && tar czf release.tar.gz $TAR_OPTS server migrations/
