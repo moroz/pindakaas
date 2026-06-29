@@ -17,8 +17,8 @@ import (
 
 func main() {
 	db, _ := sql.Open("sqlite", config.DatabaseUrl)
-	if err := db.Ping(); err != nil {
-		log.Fatal("Failed to open database: ", err)
+	if _, err := db.ExecContext(context.Background(), "pragma foreign_keys = on"); err != nil {
+		log.Fatal("Failed to connect to database: ", err)
 	}
 	defer db.Close()
 

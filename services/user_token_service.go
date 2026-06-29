@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/moroz/pindakaas/config"
@@ -26,7 +25,7 @@ func generateToken() ([]byte, error) {
 	return token, err
 }
 
-func (s *UserTokenService) IssueAccessTokenForUser(ctx context.Context, user *queries.User, validity time.Duration) (*queries.UserToken, error) {
+func (s *UserTokenService) IssueAccessTokenForUser(ctx context.Context, user *queries.User) (*queries.UserToken, error) {
 	token, err := generateToken()
 	if err != nil {
 		return nil, err

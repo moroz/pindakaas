@@ -5,7 +5,9 @@ go = "1.26.4"
 "go:github.com/air-verse/air" = "latest"
 "go:github.com/pressly/goose/v3/cmd/goose" = "v3.27.1"
 "go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
+node = "26.4.0"
 sqlite = "latest"
+pnpm = "11.9.0"
 
 [env]
 DATABASE_URL = "./db/dev.db"

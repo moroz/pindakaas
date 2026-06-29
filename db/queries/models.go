@@ -23,6 +23,9 @@ type User struct {
 	ID         uuid.UUID
 	Email      string
 	UserRole   interface{}
+	GivenName  *string
+	FamilyName *string
+	Avatar     *string
 	InsertedAt dbtypes.UnixTimestamp
 	UpdatedAt  dbtypes.UnixTimestamp
 }

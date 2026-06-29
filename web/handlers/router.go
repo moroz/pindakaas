@@ -18,8 +18,12 @@ func Router(db *sql.DB, store *sessions.Store) http.Handler {
 	r.Use(FetchSessionFromCookies(store, config.SessionCookieName))
 	r.Use(FetchUserFromSession(db))
 
+	tunnels := TunnelController(db)
+	r.GET("/", tunnels.Index)
+
 	oauth2 := OIDCController(db)
 	r.GET("/oauth/google/redirect", oauth2.Redirect)
+	r.GET("/oauth/google/callback", oauth2.Callback)
 
 	return r
 }

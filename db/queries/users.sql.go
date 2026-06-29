@@ -13,7 +13,7 @@ import (
 )
 
 const findUserByUserToken = `-- name: FindUserByUserToken :one
-select u.id, u.email, u.user_role, u.inserted_at, u.updated_at from users u
+select u.id, u.email, u.user_role, u.given_name, u.family_name, u.avatar, u.inserted_at, u.updated_at from users u
 join user_tokens ut on u.id = ut.user_id
 where ut.inserted_at + cast(?1 as bigint) > unixepoch()
 and ut.token = ?2 and ut.context = ?3
@@ -32,6 +32,64 @@ func (q *Queries) FindUserByUserToken(ctx context.Context, arg *FindUserByUserTo
 		&i.ID,
 		&i.Email,
 		&i.UserRole,
+		&i.GivenName,
+		&i.FamilyName,
+		&i.Avatar,
+		&i.InsertedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+select id, email, user_role, given_name, family_name, avatar, inserted_at, updated_at from users where email = ?
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.UserRole,
+		&i.GivenName,
+		&i.FamilyName,
+		&i.Avatar,
+		&i.InsertedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const insertUser = `-- name: InsertUser :one
+insert into users (id, email, given_name, family_name, avatar)
+values (?, ?, ?, ?, ?) returning id, email, user_role, given_name, family_name, avatar, inserted_at, updated_at
+`
+
+type InsertUserParams struct {
+	ID         uuid.UUID
+	Email      string
+	GivenName  *string
+	FamilyName *string
+	Avatar     *string
+}
+
+func (q *Queries) InsertUser(ctx context.Context, arg *InsertUserParams) (*User, error) {
+	row := q.db.QueryRowContext(ctx, insertUser,
+		arg.ID,
+		arg.Email,
+		arg.GivenName,
+		arg.FamilyName,
+		arg.Avatar,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.UserRole,
+		&i.GivenName,
+		&i.FamilyName,
+		&i.Avatar,
 		&i.InsertedAt,
 		&i.UpdatedAt,
 	)
@@ -64,6 +122,48 @@ func (q *Queries) InsertUserToken(ctx context.Context, arg *InsertUserTokenParam
 		&i.Token,
 		&i.Context,
 		&i.InsertedAt,
+	)
+	return &i, err
+}
+
+const upsertUser = `-- name: UpsertUser :one
+insert into users (id, email, given_name, family_name, avatar)
+values (?, ?, ?, ?, ?)
+on conflict (email)
+do update set
+  given_name = excluded.given_name,
+  family_name = excluded.family_name,
+  avatar = excluded.avatar,
+  updated_at = (unixepoch())
+returning id, email, user_role, given_name, family_name, avatar, inserted_at, updated_at
+`
+
+type UpsertUserParams struct {
+	ID         uuid.UUID
+	Email      string
+	GivenName  *string
+	FamilyName *string
+	Avatar     *string
+}
+
+func (q *Queries) UpsertUser(ctx context.Context, arg *UpsertUserParams) (*User, error) {
+	row := q.db.QueryRowContext(ctx, upsertUser,
+		arg.ID,
+		arg.Email,
+		arg.GivenName,
+		arg.FamilyName,
+		arg.Avatar,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.UserRole,
+		&i.GivenName,
+		&i.FamilyName,
+		&i.Avatar,
+		&i.InsertedAt,
+		&i.UpdatedAt,
 	)
 	return &i, err
 }

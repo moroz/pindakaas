@@ -37,7 +37,11 @@ func New(props *HTTPServerProps) *HTTPServer {
 }
 
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	host, _, _ := net.SplitHostPort(r.Host)
+	host := r.Host
+
+	if h, _, err := net.SplitHostPort(r.Host); err == nil {
+		host = h
+	}
 
 	switch host {
 	case config.BaseDomain, "localhost":

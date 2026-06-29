@@ -3,6 +3,9 @@ create table users (
   id uuid not null primary key,
   email text not null unique,
   user_role user_role not null default 'Regular',
+  given_name text,
+  family_name text,
+  avatar text,
   inserted_at timestamp not null default (unixepoch()),
   updated_at timestamp not null default (unixepoch())
 );
