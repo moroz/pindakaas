@@ -37,7 +37,7 @@ func FormatHostPort(port uint16) string {
 
 var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_FILE")
 
-var SSHPort = MustParsePortNumber(GetenvWithDefault("SSH_PORT", "2137"))
+var SSHPort = MustParsePortNumber(GetenvWithDefault("SSH_PORT", "42069"))
 var HTTPPort = MustParsePortNumber(GetenvWithDefault("HTTP_PORT", "8080"))
 var HTTPSPort = MustParsePortNumber(GetenvWithDefault("HTTPS_PORT", "8081"))
 

@@ -1,14 +1,13 @@
 package httpserver
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"strings"
 
@@ -44,52 +43,26 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("Handling incoming request", "method", r.Method, "path", r.URL.Path)
+		slog.Info("Handling incoming request", "method", r.Method, "path", r.URL.Path, "host", r.Host)
 
-		subdomain, _, _ := strings.Cut(r.Host, ".")
+		subdomain, _, found := strings.Cut(r.Host, ".")
+		if !found {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
 		conn, ok := s.connRegistry.GetTunnelForSubdomain(subdomain)
 		if !ok {
 			http.Error(w, "Bad Gateway", http.StatusBadGateway)
 			return
 		}
-		_ = conn
 
-		host, port, err := parseRemoteAddrPort(r.RemoteAddr)
-		if err != nil {
-			log.Print("Failed to parse remote address and port: ", err)
+		proxy := &httputil.ReverseProxy{
+			Transport: conn,
+			Rewrite:   func(pr *httputil.ProxyRequest) {},
 		}
 
-		channel, _, err := conn.OpenForwardingChannel(host, port)
-		if err != nil {
-			log.Print("Failed to open forwarding channel: ", err)
-			http.Error(w, "Bad Gateway", http.StatusBadGateway)
-			return
-		}
-		defer channel.Close()
-
-		err = r.Write(channel)
-		if err != nil {
-			// TODO: Bad Gateway?
-			log.Print("Failed to forward request: ", err)
-			http.Error(w, "Bad Gateway", http.StatusBadGateway)
-			return
-		}
-
-		resp, err := http.ReadResponse(bufio.NewReader(channel), r)
-		if err != nil {
-			// TODO: Internal Server Error? Transport error?
-			log.Print("Failed to read response to forwarded request: ", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		for key, values := range resp.Header {
-			for _, value := range values {
-				w.Header().Add(key, value)
-			}
-		}
-		w.WriteHeader(resp.StatusCode)
-		io.Copy(w, resp.Body)
+		proxy.ServeHTTP(w, r)
 	})
 
 	mux.ServeHTTP(w, r)
