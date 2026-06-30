@@ -33,3 +33,9 @@ sql:
             go_type:
               import: "github.com/moroz/pindakaas/types/dbtypes"
               type: "UserTokenContext"
+
+          - column: "tunnels.password_encrypted"
+            go_type:
+              import: "github.com/bincyber/go-sqlcrypter"
+              type: "EncryptedBytes"
+              package: "sqlcrypter"

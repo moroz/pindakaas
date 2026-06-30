@@ -1,5 +1,5 @@
 -- name: InsertTunnel :one
-insert into tunnels (id, subdomain, username, password_hash, user_id)
+insert into tunnels (id, subdomain, username, password_encrypted, user_id)
 values (?, ?, ?, ?, ?)
 returning *;
 

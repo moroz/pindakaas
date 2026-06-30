@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"strings"
 
-	"github.com/alexedwards/argon2id"
+	"github.com/bincyber/go-sqlcrypter"
 	"github.com/google/uuid"
 	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
@@ -33,17 +34,16 @@ func (s *TunnelService) AuthenticateHostBySSHUsername(ctx context.Context, userS
 		return nil, ErrInvalidCredentials
 	}
 
-	host, err := queries.New(s.db).GetTunnelByUsername(ctx, username)
+	tunnel, err := queries.New(s.db).GetTunnelByUsername(ctx, username)
 	if err != nil {
 		return nil, ErrInvalidCredentials
 	}
 
-	match, err := argon2id.ComparePasswordAndHash(password, host.PasswordHash)
-	if err != nil || !match {
+	if match := subtle.ConstantTimeCompare([]byte(password), tunnel.PasswordEncrypted.Bytes()); match != 1 {
 		return nil, ErrInvalidCredentials
 	}
 
-	return host, nil
+	return tunnel, nil
 }
 
 func randomHex(length int) (string, error) {
@@ -52,7 +52,7 @@ func randomHex(length int) (string, error) {
 	return hex.EncodeToString(buf[:]), err
 }
 
-func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.User) (*types.TunnelDetailDTO, error) {
+func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.User) (*queries.Tunnel, error) {
 	subdomain, err := GenerateTunnelName()
 	if err != nil {
 		return nil, err
@@ -63,31 +63,18 @@ func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.U
 		return nil, err
 	}
 
-	password, err := randomHex(4)
+	password, err := randomHex(8)
 	if err != nil {
 		return nil, err
 	}
 
-	passwordHash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
-	if err != nil {
-		return nil, err
-	}
-
-	tunnel, err := queries.New(s.db).InsertTunnel(ctx, &queries.InsertTunnelParams{
-		ID:           uuid.Must(uuid.NewV7()),
-		Subdomain:    subdomain,
-		Username:     username,
-		PasswordHash: passwordHash,
-		UserID:       user.ID,
+	return queries.New(s.db).InsertTunnel(ctx, &queries.InsertTunnelParams{
+		ID:                uuid.Must(uuid.NewV7()),
+		Subdomain:         subdomain,
+		Username:          username,
+		PasswordEncrypted: sqlcrypter.NewEncryptedBytes(password),
+		UserID:            user.ID,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.TunnelDetailDTO{
-		Tunnel:            tunnel,
-		PlaintextPassword: password,
-	}, nil
 }
 
 func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.User) ([]*types.TunnelListDTO, error) {
@@ -115,15 +102,9 @@ func (s *TunnelService) DeleteTunnel(ctx context.Context, tunnelId uuid.UUID, us
 	})
 }
 
-func (s *TunnelService) GetTunnelForUser(ctx context.Context, tunnelId uuid.UUID, user *queries.User) (*types.TunnelDetailDTO, error) {
-	data, err := queries.New(s.db).GetTunnelForUser(ctx, &queries.GetTunnelForUserParams{
+func (s *TunnelService) GetTunnelForUser(ctx context.Context, tunnelId uuid.UUID, user *queries.User) (*queries.Tunnel, error) {
+	return queries.New(s.db).GetTunnelForUser(ctx, &queries.GetTunnelForUserParams{
 		TunnelID: tunnelId,
 		UserID:   user.ID,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return &types.TunnelDetailDTO{
-		Tunnel: data,
-	}, nil
 }

@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/bincyber/go-sqlcrypter"
+	"github.com/moroz/pindakaas/internal/crypto"
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -65,6 +67,14 @@ func RequireInProduction(name string, defaultValue string) string {
 	return GetenvWithDefault(name, defaultValue)
 }
 
+func init() {
+	crypterer, err := crypto.NewEncryptionProvider(DatabaseEncryptionKey, nil)
+	if err != nil {
+		log.Fatalf("Failed to initialize database encryption provider: %s", err)
+	}
+	sqlcrypter.Init(crypterer)
+}
+
 var IsProd = os.Getenv("GO_ENV") == "prod"
 
 var SSHServerKeyPath = MustGetenv("SSH_SERVER_KEY_FILE")
@@ -86,7 +96,7 @@ var DatabaseUrl = MustGetenv("DATABASE_URL")
 var SecretKeyBase = MustGetenvBase64("SECRET_KEY_BASE")
 
 var SessionKey = MustDeriveKey(SecretKeyBase, "Sessions", 32)
-var DatabaseHMACKey = MustDeriveKey(SecretKeyBase, "DatabaseHMAC", 32)
+var DatabaseEncryptionKey = MustDeriveKey(SecretKeyBase, "ColumnLevelEncryption", 32)
 
 var GoogleClientId = RequireInProduction("GOOGLE_CLIENT_ID", "")
 var GoogleClientSecret = RequireInProduction("GOOGLE_CLIENT_SECRET", "")

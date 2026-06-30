@@ -7,14 +7,14 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-func AppHeader(ctx *types.RequestContext, title string, actions ...Node) Node {
+func AppHeader(ctx *types.RequestContext) Node {
 	return Header(
 		Class("h-16 bg-blue-600 text-white shadow fixed top-0 left-0 right-0"),
 		Div(
 			Class("container mx-auto flex justify-between items-center h-full"),
 			H1(Class("text-3xl font-bold my-4"), A(Href("/"), Text("Pindakaas"))),
 			Div(
-				Class("text-right ml-auto mr-6"),
+				Class("text-right ml-auto mr-4 leading-tight text-sm"),
 				Span(
 					Text(*ctx.User.GivenName+" "+*ctx.User.FamilyName),
 					Br(),
@@ -27,7 +27,8 @@ func AppHeader(ctx *types.RequestContext, title string, actions ...Node) Node {
 				Input(Type("hidden"), Name("_method"), Value("DELETE")),
 				Button(Class("button secondary gap-2"), Type("submit"),
 					components.Icon(&components.IconProps{
-						Name: "person-through-window",
+						Name:    "person-through-window",
+						Classes: "mt-[3px]",
 					}),
 					Text("Sign out"),
 				),

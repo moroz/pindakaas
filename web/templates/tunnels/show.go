@@ -2,6 +2,7 @@ package tunnels
 
 import (
 	"github.com/moroz/pindakaas/config"
+	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
 	"github.com/moroz/pindakaas/web/templates/components"
 	"github.com/moroz/pindakaas/web/templates/layout"
@@ -9,9 +10,10 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-func Show(ctx *types.RequestContext, data *types.TunnelDetailDTO) Node {
+func Show(ctx *types.RequestContext, data *queries.Tunnel) Node {
 	fqdn := "https://" + data.Subdomain + "." + config.BaseDomain
 	return layout.AppLayout(ctx, "New Tunnel",
+		A(Href("/"), Class("mt-4 inline-block underline text-primary"), Text("<< Back to tunnels")),
 		H2(Class("text-2xl font-bold my-4"), Text("New Tunnel")),
 		Table(
 			Class("data-table w-full"),
@@ -28,14 +30,9 @@ func Show(ctx *types.RequestContext, data *types.TunnelDetailDTO) Node {
 				),
 				Tr(
 					Th(Text("Password")),
-					Td(Class("font-mono"), Text(data.PlaintextPassword)),
+					Td(Class("font-mono"), Text(data.PasswordEncrypted.Plaintext())),
 				),
 			),
 		),
-		P(
-			Class("mt-4 text-sm text-gray-500"),
-			Text("Make sure to copy the password now — it will not be shown again."),
-		),
-		A(Href("/"), Class("mt-4 inline-block"), Text("← Back to tunnels")),
 	)
 }

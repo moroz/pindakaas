@@ -5,18 +5,19 @@
 package queries
 
 import (
+	sqlcrypter "github.com/bincyber/go-sqlcrypter"
 	uuid "github.com/google/uuid"
 	"github.com/moroz/pindakaas/types/dbtypes"
 )
 
 type Tunnel struct {
-	ID           uuid.UUID
-	Subdomain    string
-	Username     string
-	PasswordHash string
-	InsertedAt   dbtypes.UnixTimestamp
-	UpdatedAt    dbtypes.UnixTimestamp
-	UserID       uuid.UUID
+	ID                uuid.UUID
+	Subdomain         string
+	Username          string
+	PasswordEncrypted sqlcrypter.EncryptedBytes
+	InsertedAt        dbtypes.UnixTimestamp
+	UpdatedAt         dbtypes.UnixTimestamp
+	UserID            uuid.UUID
 }
 
 type User struct {

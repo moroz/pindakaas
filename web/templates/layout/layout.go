@@ -25,7 +25,7 @@ func RootLayout(ctx *types.RequestContext, title string, children ...Node) Node 
 
 func AppLayout(ctx *types.RequestContext, title string, children ...Node) Node {
 	return RootLayout(ctx, title,
-		AppHeader(ctx, title),
+		AppHeader(ctx),
 
 		Div(
 			Class("container mx-auto pt-16"),

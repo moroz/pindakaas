@@ -8,6 +8,7 @@ package queries
 import (
 	"context"
 
+	sqlcrypter "github.com/bincyber/go-sqlcrypter"
 	uuid "github.com/google/uuid"
 )
 
@@ -26,7 +27,7 @@ func (q *Queries) DeleteTunnelForUser(ctx context.Context, arg *DeleteTunnelForU
 }
 
 const getTunnelByUsername = `-- name: GetTunnelByUsername :one
-select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where username = ?
+select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels where username = ?
 `
 
 func (q *Queries) GetTunnelByUsername(ctx context.Context, username string) (*Tunnel, error) {
@@ -36,7 +37,7 @@ func (q *Queries) GetTunnelByUsername(ctx context.Context, username string) (*Tu
 		&i.ID,
 		&i.Subdomain,
 		&i.Username,
-		&i.PasswordHash,
+		&i.PasswordEncrypted,
 		&i.InsertedAt,
 		&i.UpdatedAt,
 		&i.UserID,
@@ -45,7 +46,7 @@ func (q *Queries) GetTunnelByUsername(ctx context.Context, username string) (*Tu
 }
 
 const getTunnelForUser = `-- name: GetTunnelForUser :one
-select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where id = ? and user_id = ?
+select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels where id = ? and user_id = ?
 `
 
 type GetTunnelForUserParams struct {
@@ -60,7 +61,7 @@ func (q *Queries) GetTunnelForUser(ctx context.Context, arg *GetTunnelForUserPar
 		&i.ID,
 		&i.Subdomain,
 		&i.Username,
-		&i.PasswordHash,
+		&i.PasswordEncrypted,
 		&i.InsertedAt,
 		&i.UpdatedAt,
 		&i.UserID,
@@ -69,17 +70,17 @@ func (q *Queries) GetTunnelForUser(ctx context.Context, arg *GetTunnelForUserPar
 }
 
 const insertTunnel = `-- name: InsertTunnel :one
-insert into tunnels (id, subdomain, username, password_hash, user_id)
+insert into tunnels (id, subdomain, username, password_encrypted, user_id)
 values (?, ?, ?, ?, ?)
-returning id, subdomain, username, password_hash, inserted_at, updated_at, user_id
+returning id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id
 `
 
 type InsertTunnelParams struct {
-	ID           uuid.UUID
-	Subdomain    string
-	Username     string
-	PasswordHash string
-	UserID       uuid.UUID
+	ID                uuid.UUID
+	Subdomain         string
+	Username          string
+	PasswordEncrypted sqlcrypter.EncryptedBytes
+	UserID            uuid.UUID
 }
 
 func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*Tunnel, error) {
@@ -87,7 +88,7 @@ func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*T
 		arg.ID,
 		arg.Subdomain,
 		arg.Username,
-		arg.PasswordHash,
+		arg.PasswordEncrypted,
 		arg.UserID,
 	)
 	var i Tunnel
@@ -95,7 +96,7 @@ func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*T
 		&i.ID,
 		&i.Subdomain,
 		&i.Username,
-		&i.PasswordHash,
+		&i.PasswordEncrypted,
 		&i.InsertedAt,
 		&i.UpdatedAt,
 		&i.UserID,
@@ -104,7 +105,7 @@ func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*T
 }
 
 const listTunnels = `-- name: ListTunnels :many
-select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels order by id
+select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels order by id
 `
 
 func (q *Queries) ListTunnels(ctx context.Context) ([]*Tunnel, error) {
@@ -120,7 +121,7 @@ func (q *Queries) ListTunnels(ctx context.Context) ([]*Tunnel, error) {
 			&i.ID,
 			&i.Subdomain,
 			&i.Username,
-			&i.PasswordHash,
+			&i.PasswordEncrypted,
 			&i.InsertedAt,
 			&i.UpdatedAt,
 			&i.UserID,
@@ -139,7 +140,7 @@ func (q *Queries) ListTunnels(ctx context.Context) ([]*Tunnel, error) {
 }
 
 const listTunnelsForUser = `-- name: ListTunnelsForUser :many
-select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where user_id = ? order by id
+select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels where user_id = ? order by id
 `
 
 func (q *Queries) ListTunnelsForUser(ctx context.Context, userID uuid.UUID) ([]*Tunnel, error) {
@@ -155,7 +156,7 @@ func (q *Queries) ListTunnelsForUser(ctx context.Context, userID uuid.UUID) ([]*
 			&i.ID,
 			&i.Subdomain,
 			&i.Username,
-			&i.PasswordHash,
+			&i.PasswordEncrypted,
 			&i.InsertedAt,
 			&i.UpdatedAt,
 			&i.UserID,

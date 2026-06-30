@@ -34,6 +34,11 @@ func statusBadge(active bool) Node {
 	)
 }
 
+func formatTimestamp(t time.Time) string {
+	tz, _ := time.LoadLocation("Europe/Berlin")
+	return t.In(tz).Format(time.DateTime)
+}
+
 func Index(ctx *types.RequestContext, data *IndexProps) Node {
 	return layout.AppLayout(ctx, "Tunnels",
 		Header(
@@ -80,7 +85,7 @@ func Index(ctx *types.RequestContext, data *IndexProps) Node {
 								),
 							),
 							Td(Class("font-mono"), Text(tunnel.Username)),
-							Td(Text(tunnel.InsertedAt.Format(time.RFC3339))),
+							Td(Text(formatTimestamp(*tunnel.InsertedAt.Time))),
 						)
 					}),
 				),

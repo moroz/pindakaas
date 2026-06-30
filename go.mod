@@ -5,6 +5,8 @@ go 1.26.4
 require (
 	github.com/Oudwins/tailwind-merge-go v0.2.1
 	github.com/alexedwards/argon2id v1.0.0
+	github.com/bincyber/go-sqlcrypter v0.3.0
+	github.com/d1str0/pkcs7 v0.0.0-20200424205038-d65c16a5759a
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v5 v5.2.1
 	github.com/moroz/securecookie v0.0.0-20250207075547-a6abdbe4e5e4
@@ -28,6 +30,9 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
 	github.com/googleapis/gax-go/v2 v2.21.0 // indirect
+	github.com/jackc/pgx/v5 v5.10.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -43,6 +48,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/grpc v1.80.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
+	gorm.io/gorm v1.31.2 // indirect
 	modernc.org/libc v1.73.5 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect

@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -29,12 +30,12 @@ func TunnelController(db *sql.DB, tunnelRegistry types.TunnelRegistry) *tunnelCo
 func (cc *tunnelController) Create(c *echo.Context) error {
 	ctx := helpers.GetRequestContext(c)
 
-	dto, err := cc.tunnelService.CreateTunnelForUser(c.Request().Context(), ctx.User)
+	tunnel, err := cc.tunnelService.CreateTunnelForUser(c.Request().Context(), ctx.User)
 	if err != nil {
 		return err
 	}
 
-	return tunnels.Show(ctx, dto).Render(c.Response())
+	return c.Redirect(http.StatusFound, fmt.Sprintf("/tunnels/%s", tunnel.ID))
 }
 
 func (cc *tunnelController) Index(c *echo.Context) error {
