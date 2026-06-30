@@ -22,6 +22,17 @@ func TunnelController(db *sql.DB, tunnelRegistry types.TunnelRegistry) *tunnelCo
 	}
 }
 
+func (cc *tunnelController) Create(c *echo.Context) error {
+	ctx := helpers.GetRequestContext(c)
+
+	dto, err := cc.tunnelService.CreateTunnelForUser(c.Request().Context(), ctx.User)
+	if err != nil {
+		return err
+	}
+
+	return tunnels.Show(ctx, dto).Render(c.Response())
+}
+
 func (cc *tunnelController) Index(c *echo.Context) error {
 	ctx := helpers.GetRequestContext(c)
 

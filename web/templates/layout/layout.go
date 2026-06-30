@@ -29,11 +29,6 @@ func AppLayout(ctx *types.RequestContext, title string, children ...Node) Node {
 
 		Div(
 			Class("container mx-auto pt-16"),
-			Header(
-				Class("flex justify-between items-center"),
-				H2(Class("text-2xl font-bold my-4"), Text(title)),
-			),
-
 			Group(children),
 		))
 }

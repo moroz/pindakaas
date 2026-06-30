@@ -1,3 +1,8 @@
+-- name: InsertTunnel :one
+insert into tunnels (id, subdomain, username, password_hash, user_id)
+values (?, ?, ?, ?, ?)
+returning *;
+
 -- name: ListTunnels :many
 select * from tunnels order by id;
 

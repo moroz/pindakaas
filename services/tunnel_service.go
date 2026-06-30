@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/google/uuid"
 	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
 )
@@ -39,6 +42,47 @@ func (s *TunnelService) AuthenticateHostBySSHUsername(ctx context.Context, userS
 	}
 
 	return host, nil
+}
+
+func randomHex4() (string, error) {
+	var buf [4]byte
+	_, err := rand.Read(buf[:])
+	return hex.EncodeToString(buf[:]), err
+}
+
+func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.User) (*types.TunnelCreateDTO, error) {
+	subdomain, err := GenerateTunnelName()
+	if err != nil {
+		return nil, err
+	}
+
+	username, err := randomHex4()
+	if err != nil {
+		return nil, err
+	}
+
+	password, err := randomHex4()
+	if err != nil {
+		return nil, err
+	}
+
+	passwordHash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return nil, err
+	}
+
+	tunnel, err := queries.New(s.db).InsertTunnel(ctx, &queries.InsertTunnelParams{
+		ID:           uuid.Must(uuid.NewV7()),
+		Subdomain:    subdomain,
+		Username:     username,
+		PasswordHash: passwordHash,
+		UserID:       user.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.TunnelCreateDTO{Tunnel: tunnel, PlaintextPassword: password}, nil
 }
 
 func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.User) ([]*types.TunnelListDTO, error) {

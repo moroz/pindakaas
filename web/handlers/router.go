@@ -51,6 +51,7 @@ func Router(props *RouterProps) http.Handler {
 
 		tunnels := TunnelController(props.DB, props.TunnelRegistry)
 		r.GET("/", tunnels.Index)
+		r.POST("/tunnels", tunnels.Create)
 	})
 
 	// Unauthenticated-only routes

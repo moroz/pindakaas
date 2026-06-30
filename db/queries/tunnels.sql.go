@@ -30,6 +30,41 @@ func (q *Queries) GetTunnelByUsername(ctx context.Context, username string) (*Tu
 	return &i, err
 }
 
+const insertTunnel = `-- name: InsertTunnel :one
+insert into tunnels (id, subdomain, username, password_hash, user_id)
+values (?, ?, ?, ?, ?)
+returning id, subdomain, username, password_hash, inserted_at, updated_at, user_id
+`
+
+type InsertTunnelParams struct {
+	ID           uuid.UUID
+	Subdomain    string
+	Username     string
+	PasswordHash string
+	UserID       uuid.UUID
+}
+
+func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*Tunnel, error) {
+	row := q.db.QueryRowContext(ctx, insertTunnel,
+		arg.ID,
+		arg.Subdomain,
+		arg.Username,
+		arg.PasswordHash,
+		arg.UserID,
+	)
+	var i Tunnel
+	err := row.Scan(
+		&i.ID,
+		&i.Subdomain,
+		&i.Username,
+		&i.PasswordHash,
+		&i.InsertedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+	)
+	return &i, err
+}
+
 const listTunnels = `-- name: ListTunnels :many
 select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels order by id
 `

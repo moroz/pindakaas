@@ -10,6 +10,7 @@ sqlite = "latest"
 pnpm = "11.9.0"
 overmind = "latest"
 deno = "latest"
+oxfmt = "latest"
 
 [env]
 DATABASE_URL = "./db/dev.db"
