@@ -121,11 +121,8 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 				BindPort:      request.BindPort,
 				AllocatedPort: 42069,
 			}
-			if _, err := s.connRegistry.RegisterConnection(host.Subdomain, tunnel); err != nil {
-				log.Print("Failed to register tunnel: ", err)
-				break
-			}
-			defer s.connRegistry.DeregisterConnection(host.Subdomain)
+			s.connRegistry.RegisterConnection(host.Subdomain, tunnel)
+			defer s.connRegistry.DeregisterConnection(host.Subdomain, tunnel)
 
 			response := ssh.Marshal(types.RequestPortForwardingSuccessPayload{BindPort: tunnel.AllocatedPort})
 			req.Reply(true, response)

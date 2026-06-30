@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"fmt"
 	"log/slog"
 	"sync"
 
@@ -18,19 +17,26 @@ func New() *Registry {
 	return &Registry{}
 }
 
-func (r *Registry) RegisterConnection(subdomain string, tunnel *types.Tunnel) (bool, error) {
-	if _, ok := r.connections.Load(subdomain); ok {
-		return false, fmt.Errorf("subdomain is already in use")
-	}
-
-	r.connections.Store(subdomain, tunnel)
+// RegisterConnection registers tunnel under subdomain using "last connection
+// wins" semantics: if a tunnel is already registered for the subdomain, its SSH
+// connection is closed and it is replaced by the new tunnel. The swap is atomic
+// so concurrent registrations cannot lose an eviction.
+func (r *Registry) RegisterConnection(subdomain string, tunnel *types.Tunnel) {
+	previous, loaded := r.connections.Swap(subdomain, tunnel)
 	slog.Info("Registered connection", "subdomain", subdomain, "bind_addr", tunnel.BindAddr, "bind_port", tunnel.BindPort)
 
-	return true, nil
+	if loaded {
+		old := previous.(*types.Tunnel)
+		slog.Info("Evicting existing tunnel for subdomain", "subdomain", subdomain)
+		old.Conn.Close()
+	}
 }
 
-func (r *Registry) DeregisterConnection(subdomain string) {
-	r.connections.Delete(subdomain)
+// DeregisterConnection removes tunnel from subdomain only if it is still the
+// registered tunnel. This guards against an evicted connection's teardown
+// deleting the newer tunnel that replaced it.
+func (r *Registry) DeregisterConnection(subdomain string, tunnel *types.Tunnel) {
+	r.connections.CompareAndDelete(subdomain, tunnel)
 }
 
 func (r *Registry) GetTunnelForSubdomain(subdomain string) (*types.Tunnel, bool) {
