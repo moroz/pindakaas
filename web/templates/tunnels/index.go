@@ -1,6 +1,8 @@
 package tunnels
 
 import (
+	"time"
+
 	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
 	"github.com/moroz/pindakaas/web/templates/layout"
@@ -15,5 +17,27 @@ type IndexProps struct {
 func Index(ctx *types.RequestContext, data *IndexProps) Node {
 	return layout.RootLayout(ctx, "Tunnels", Div(
 		H1(Class("text-3xl font-bold"), Text("Tunnels")),
+
+		Table(
+			Class("index-table w-full"),
+			THead(
+				Tr(
+					Th(Text("Active")),
+					Th(Text("Subdomain")),
+					Th(Text("Username")),
+					Th(Text("Created at")),
+				),
+			),
+			TBody(
+				Map(data.Tunnels, func(tunnel *queries.Tunnel) Node {
+					return Tr(
+						Td(),
+						Td(Class("font-mono"), Text(tunnel.Subdomain)),
+						Td(Class("font-mono"), Text(tunnel.Username)),
+						Td(Text(tunnel.InsertedAt.Format(time.RFC3339))),
+					)
+				}),
+			),
+		),
 	))
 }

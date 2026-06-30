@@ -14,6 +14,11 @@ func RootLayout(ctx *types.RequestContext, title string, children ...Node) Node 
 			TitleEl(Text("Pindakaas")),
 			AssetEntryPoint(ctx),
 		),
-		Body(Group(children)),
+		Body(
+			Div(
+				Class("container mx-auto"),
+				Group(children),
+			),
+		),
 	)
 }

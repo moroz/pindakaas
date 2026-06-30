@@ -8,6 +8,7 @@ go = "1.26.4"
 node = "26.4.0"
 sqlite = "latest"
 pnpm = "11.9.0"
+overmind = "latest"
 
 [env]
 DATABASE_URL = "./db/dev.db"

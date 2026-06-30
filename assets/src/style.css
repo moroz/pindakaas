@@ -2,3 +2,14 @@
 
 @config "../tailwind.config.js";
 
+.index-table {
+    @apply table-fixed;
+
+    th, td {
+        @apply border h-8 px-2;
+    }
+
+    tbody td {
+        @apply font-mono;
+    }
+}

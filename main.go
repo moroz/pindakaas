@@ -9,6 +9,7 @@ import (
 	"github.com/moroz/pindakaas/httpserver"
 	"github.com/moroz/pindakaas/registry"
 	"github.com/moroz/pindakaas/sshserver"
+	"github.com/moroz/pindakaas/web/handlers"
 	"github.com/moroz/pindakaas/web/sessions"
 	"golang.org/x/sync/errgroup"
 
@@ -39,10 +40,10 @@ func main() {
 		return server.Serve(ctx, config.SSHPort)
 	})
 
-	server := httpserver.New(&httpserver.HTTPServerProps{
-		ConnRegistry: reg,
-		DB:           db,
-		SessionStore: sessionStore,
+	server := httpserver.New(&handlers.RouterProps{
+		DB:             db,
+		Store:          sessionStore,
+		TunnelRegistry: reg,
 	})
 
 	g.Go(func() error {

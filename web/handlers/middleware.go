@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/moroz/pindakaas/config"
@@ -45,5 +46,21 @@ func FetchUserFromSession(db *sql.DB) echo.MiddlewareFunc {
 
 			return next(c)
 		}
+	}
+}
+
+func CacheControlMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		path := c.Request().URL.Path
+
+		// Cache versioned assets (containing hash in filename) for 1 year
+		if strings.Contains(path, "-") && (strings.HasSuffix(path, ".js") || strings.HasSuffix(path, ".css")) {
+			c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			// Short cache for other assets
+			c.Response().Header().Set("Cache-Control", "public, max-age=3600")
+		}
+
+		return next(c)
 	}
 }

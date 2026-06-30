@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"log/slog"
@@ -13,26 +12,19 @@ import (
 	"strings"
 
 	"github.com/moroz/pindakaas/config"
-	"github.com/moroz/pindakaas/registry"
+	"github.com/moroz/pindakaas/types"
 	"github.com/moroz/pindakaas/web/handlers"
-	"github.com/moroz/pindakaas/web/sessions"
 )
 
 type HTTPServer struct {
-	connRegistry *registry.Registry
+	connRegistry types.TunnelRegistry
 	adminRouter  http.Handler
 }
 
-type HTTPServerProps struct {
-	ConnRegistry *registry.Registry
-	DB           *sql.DB
-	SessionStore *sessions.Store
-}
-
-func New(props *HTTPServerProps) *HTTPServer {
+func New(props *handlers.RouterProps) *HTTPServer {
 	return &HTTPServer{
-		connRegistry: props.ConnRegistry,
-		adminRouter:  handlers.Router(props.DB, props.SessionStore),
+		connRegistry: props.TunnelRegistry,
+		adminRouter:  handlers.Router(props),
 	}
 }
 

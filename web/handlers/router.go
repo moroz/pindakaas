@@ -7,23 +7,41 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/moroz/pindakaas/config"
+	"github.com/moroz/pindakaas/types"
 	"github.com/moroz/pindakaas/web/sessions"
 )
 
-func Router(db *sql.DB, store *sessions.Store) http.Handler {
+type RouterProps struct {
+	DB             *sql.DB
+	Store          *sessions.Store
+	TunnelRegistry types.TunnelRegistry
+}
+
+func Router(props *RouterProps) http.Handler {
 	r := echo.New()
 
+	r.Use(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
+		Getter: middleware.MethodFromForm("_method"),
+	}))
+	r.Use(middleware.RequestID())
+	r.Use(middleware.Recover())
 	r.Use(middleware.RequestLogger())
-	r.Use(SetRequestContext(store))
-	r.Use(FetchSessionFromCookies(store, config.SessionCookieName))
-	r.Use(FetchUserFromSession(db))
+	r.Use(SetRequestContext(props.Store))
+	r.Use(FetchSessionFromCookies(props.Store, config.SessionCookieName))
+	r.Use(FetchUserFromSession(props.DB))
 
-	tunnels := TunnelController(db)
+	tunnels := TunnelController(props.DB)
 	r.GET("/", tunnels.Index)
 
-	oauth2 := OIDCController(db)
+	oauth2 := OIDCController(props.DB)
 	r.GET("/oauth/google/redirect", oauth2.Redirect)
 	r.GET("/oauth/google/callback", oauth2.Callback)
+
+	if config.IsProd {
+		r.Static("/assets", "assets/dist/assets", CacheControlMiddleware)
+	} else {
+		r.Static("/assets", "assets/public/assets")
+	}
 
 	return r
 }

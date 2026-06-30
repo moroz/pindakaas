@@ -12,6 +12,8 @@ type Registry struct {
 	connections sync.Map
 }
 
+var _ types.TunnelRegistry = &Registry{}
+
 func New() *Registry {
 	return &Registry{}
 }
