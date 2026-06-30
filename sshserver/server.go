@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -213,7 +214,11 @@ func handleSession(newChan ssh.NewChannel, subdomain string, tunnel *types.Tunne
 			}
 			if !attached {
 				attached = true
-				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with ~. or Ctrl-C.\r\n", subdomain)
+				url := fmt.Sprintf("https://%s.%s", subdomain, config.BaseDomain)
+				if config.HTTPSPort != 443 {
+					url = net.JoinHostPort(url, strconv.Itoa(int(config.HTTPSPort)))
+				}
+				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with ~. or Ctrl-C.\r\n", url)
 				tunnel.AttachLogSink(lines)
 			}
 		default:
