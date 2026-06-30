@@ -126,6 +126,15 @@ func (q *Queries) InsertUserToken(ctx context.Context, arg *InsertUserTokenParam
 	return &i, err
 }
 
+const revokeUserToken = `-- name: RevokeUserToken :exec
+delete from user_tokens where token = ?
+`
+
+func (q *Queries) RevokeUserToken(ctx context.Context, token []byte) error {
+	_, err := q.db.ExecContext(ctx, revokeUserToken, token)
+	return err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 insert into users (id, email, given_name, family_name, avatar)
 values (?, ?, ?, ?, ?)

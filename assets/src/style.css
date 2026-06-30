@@ -2,6 +2,10 @@
 
 @config "../tailwind.config.js";
 
+@theme {
+  --color-primary: var(--color-blue-500);
+}
+
 .index-table {
     @apply table-fixed;
 
@@ -17,4 +21,16 @@
 .pindakaas-bg {
   background-image: url(./assets/background.jpg);
   background-size: 100vw 100vh;
+}
+
+.card {
+  @apply bg-white p-6 shadow w-md rounded-sm;
+}
+
+.button {
+  @apply bg-primary h-10 text-white inline-flex items-center text-center px-4 rounded-sm justify-center cursor-pointer;
+
+  :is(&).secondary {
+    @apply bg-white text-black;
+  }
 }

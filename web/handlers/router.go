@@ -29,7 +29,10 @@ func Group(r Groupie, prefix string, cb func(r *echo.Group)) {
 func Router(props *RouterProps) http.Handler {
 	r := echo.New()
 
-	r.Use(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
+	// MethodOverride must run BEFORE routing (Pre, not Use): Echo's router
+	// matches the method first, so a form POST would 405 against the DELETE
+	// route before Use middleware could rewrite the method.
+	r.Pre(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
 		Getter: middleware.MethodFromForm("_method"),
 	}))
 	r.Use(middleware.RequestID())
@@ -43,6 +46,9 @@ func Router(props *RouterProps) http.Handler {
 	Group(r, "", func(r *echo.Group) {
 		r.Use(RequireAuthenticatedUser)
 
+		sessions := SessionController(props.DB)
+		r.DELETE("/sign-out", sessions.Delete)
+
 		tunnels := TunnelController(props.DB)
 		r.GET("/", tunnels.Index)
 	})
@@ -51,7 +57,7 @@ func Router(props *RouterProps) http.Handler {
 	Group(r, "", func(r *echo.Group) {
 		r.Use(RedirectToHomeIfAuthenticated)
 
-		sessions := SessionController()
+		sessions := SessionController(props.DB)
 		r.GET("/sign-in", sessions.New)
 
 		oauth2 := OIDCController(props.DB)

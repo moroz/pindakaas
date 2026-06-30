@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"strconv"
 	"strings"
 
 	"github.com/moroz/pindakaas/config"
@@ -62,8 +61,12 @@ func (s *HTTPServer) ServeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	proxy := &httputil.ReverseProxy{
 		Transport: conn,
 		Rewrite: func(pr *httputil.ProxyRequest) {
-			addr := net.JoinHostPort(conn.BindAddr, strconv.Itoa(int(conn.BindPort)))
-			pr.Out.Host = addr
+			// Preserve the public Host so the backend builds correct absolute
+			// URLs (e.g. Twilio's <Stream url>). Overwriting it with the
+			// tunnel's internal bind address produced "wss://localhost:0/ws".
+			pr.Out.Host = pr.In.Host
+			// Sets X-Forwarded-For/Host/Proto (proto derived from pr.In.TLS).
+			pr.SetXForwarded()
 		},
 	}
 

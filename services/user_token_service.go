@@ -38,3 +38,7 @@ func (s *UserTokenService) IssueAccessTokenForUser(ctx context.Context, user *qu
 		Token:   token,
 	})
 }
+
+func (s *UserTokenService) RevokeUserToken(ctx context.Context, token []byte) error {
+	return queries.New(s.db).RevokeUserToken(ctx, token)
+}

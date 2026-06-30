@@ -26,3 +26,5 @@ do update set
   updated_at = (unixepoch())
 returning *;
 
+-- name: RevokeUserToken :exec
+delete from user_tokens where token = ?;

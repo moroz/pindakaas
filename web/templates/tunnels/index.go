@@ -5,6 +5,7 @@ import (
 
 	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
+	"github.com/moroz/pindakaas/web/templates/components"
 	"github.com/moroz/pindakaas/web/templates/layout"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -16,6 +17,11 @@ type IndexProps struct {
 
 func Index(ctx *types.RequestContext, data *IndexProps) Node {
 	return layout.AppLayout(ctx, "Tunnels", Div(
+		Data("hx-get", "/"),
+		Data("hx-trigger", "every 10s"),
+		Data("hx-select", ".index-table"),
+		Data("hx-target", ".index-table"),
+		Data("hx-swap", "outerHTML"),
 		Table(
 			Class("index-table w-full"),
 			THead(
@@ -29,7 +35,11 @@ func Index(ctx *types.RequestContext, data *IndexProps) Node {
 			TBody(
 				Map(data.Tunnels, func(tunnel *queries.Tunnel) Node {
 					return Tr(
-						Td(),
+						Td(
+							components.Icon(&components.IconProps{
+								Name: "bed",
+							}),
+						),
 						Td(Class("font-mono"), Text(tunnel.Subdomain)),
 						Td(Class("font-mono"), Text(tunnel.Username)),
 						Td(Text(tunnel.InsertedAt.Format(time.RFC3339))),

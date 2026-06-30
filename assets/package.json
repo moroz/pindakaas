@@ -13,5 +13,8 @@
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0"
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.10"
   }
 }

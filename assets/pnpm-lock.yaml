@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      htmx.org:
+        specifier: ^2.0.10
+        version: 2.0.10
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.1
@@ -276,6 +280,9 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  htmx.org@2.0.10:
+    resolution: {integrity: sha512-kdeJe7ZVwaS6QMz/ebBIVtZdpwen6L0OQ5GOhPV9MKBb196TCZeZu4yA7ZIQsaLKv7EpXz+So7KSXNuHXhj7Cw==}
 
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
@@ -630,6 +637,8 @@ snapshots:
     optional: true
 
   graceful-fs@4.2.11: {}
+
+  htmx.org@2.0.10: {}
 
   jiti@2.7.0: {}
 
