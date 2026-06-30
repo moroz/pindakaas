@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/alexedwards/argon2id"
@@ -25,28 +25,30 @@ func NewTunnelService(db queries.DBTX, tunnelRegistry types.TunnelRegistry) *Tun
 	}
 }
 
+var ErrInvalidCredentials = errors.New("invalid username or password")
+
 func (s *TunnelService) AuthenticateHostBySSHUsername(ctx context.Context, userString string) (*queries.Tunnel, error) {
 	username, password, found := strings.Cut(userString, ":")
 	if !found {
-		return nil, fmt.Errorf("malformed username")
+		return nil, ErrInvalidCredentials
 	}
 
 	host, err := queries.New(s.db).GetTunnelByUsername(ctx, username)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidCredentials
 	}
 
 	match, err := argon2id.ComparePasswordAndHash(password, host.PasswordHash)
 	if err != nil || !match {
-		return nil, fmt.Errorf("invalid username or password")
+		return nil, ErrInvalidCredentials
 	}
 
 	return host, nil
 }
 
-func randomHex4() (string, error) {
-	var buf [4]byte
-	_, err := rand.Read(buf[:])
+func randomHex(length int) (string, error) {
+	buf := make([]byte, length)
+	_, err := rand.Read(buf)
 	return hex.EncodeToString(buf[:]), err
 }
 
@@ -56,12 +58,12 @@ func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.U
 		return nil, err
 	}
 
-	username, err := randomHex4()
+	username, err := randomHex(4)
 	if err != nil {
 		return nil, err
 	}
 
-	password, err := randomHex4()
+	password, err := randomHex(4)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +84,10 @@ func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.U
 		return nil, err
 	}
 
-	return &types.TunnelCreateDTO{Tunnel: tunnel, PlaintextPassword: password}, nil
+	return &types.TunnelCreateDTO{
+		Tunnel:            tunnel,
+		PlaintextPassword: password,
+	}, nil
 }
 
 func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.User) ([]*types.TunnelListDTO, error) {
@@ -101,4 +106,11 @@ func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.Us
 	}
 
 	return result, nil
+}
+
+func (s *TunnelService) DeleteTunnel(ctx context.Context, tunnelId uuid.UUID, user *queries.User) error {
+	return queries.New(s.db).DeleteTunnelForUser(ctx, &queries.DeleteTunnelForUserParams{
+		ID:     tunnelId,
+		UserID: user.ID,
+	})
 }

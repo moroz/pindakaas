@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"database/sql"
+	"log"
+	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/moroz/pindakaas/services"
 	"github.com/moroz/pindakaas/types"
@@ -44,4 +47,20 @@ func (cc *tunnelController) Index(c *echo.Context) error {
 	return tunnels.Index(ctx, &tunnels.IndexProps{
 		Tunnels: data,
 	}).Render(c.Response())
+}
+
+func (cc *tunnelController) Delete(c *echo.Context) error {
+	ctx := helpers.GetRequestContext(c)
+
+	id, err := uuid.Parse(c.Param("tunnel_id"))
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	if err := cc.tunnelService.DeleteTunnel(c.Request().Context(), id, ctx.User); err != nil {
+		log.Printf("Failed to delete tunnel: %s", err)
+		return echo.ErrInternalServerError
+	}
+
+	return c.Redirect(http.StatusFound, "/")
 }

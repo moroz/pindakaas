@@ -3,45 +3,45 @@
 @config "../tailwind.config.js";
 
 @theme {
-    --color-primary: var(--color-blue-500);
+  --color-primary: var(--color-blue-500);
 }
 
 @layer components {
-    .index-table {
-        @apply table-fixed;
+  .index-table {
+    @apply table-fixed;
 
-        th, td {
-            @apply border h-8 px-2;
-        }
-
-        tbody td {
-            @apply font-mono text-center;
-        }
+    th,
+    td {
+      @apply h-8 border px-2;
     }
 
-    .pindakaas-bg {
-        background-image: url(./assets/background.jpg);
-        background-size: 100vw 100vh;
+    tbody td {
+      @apply text-center font-mono;
     }
+  }
 
-    .card {
-        @apply bg-white p-6 shadow w-md rounded-sm;
+  .pindakaas-bg {
+    background-image: url(./assets/background.jpg);
+    background-size: 100vw 100vh;
+  }
+
+  .card {
+    @apply w-md rounded-sm bg-white p-6 shadow;
+  }
+
+  .button {
+    @apply inline-flex h-10 cursor-pointer items-center justify-center rounded-sm bg-primary px-4 text-center font-semibold text-white transition-colors;
+
+    :is(&).secondary {
+      @apply bg-white text-black hover:bg-slate-200;
     }
+  }
 
-    .button {
-        @apply bg-primary h-10 text-white inline-flex items-center text-center px-4 rounded-sm justify-center cursor-pointer transition-colors font-semibold;
+  .badge {
+    @apply my-1 inline-flex gap-1 rounded-full bg-slate-200 px-3 py-1 font-sans font-bold text-slate-800 uppercase;
 
-        :is(&).secondary {
-            @apply bg-white text-black hover:bg-slate-200;
-        }
+    :is(&).active {
+      @apply bg-green-100 text-green-800;
     }
-
-
-    .badge {
-        @apply inline-flex gap-1 font-sans py-1 px-3 rounded-full font-bold uppercase my-1 bg-slate-200 text-slate-800;
-
-        :is(&).active {
-            @apply bg-green-100 text-green-800;
-        }
-    }
+  }
 }

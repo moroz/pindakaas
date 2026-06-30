@@ -11,6 +11,20 @@ import (
 	uuid "github.com/google/uuid"
 )
 
+const deleteTunnelForUser = `-- name: DeleteTunnelForUser :exec
+delete from tunnels where id = ? and user_id = ?
+`
+
+type DeleteTunnelForUserParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteTunnelForUser(ctx context.Context, arg *DeleteTunnelForUserParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTunnelForUser, arg.ID, arg.UserID)
+	return err
+}
+
 const getTunnelByUsername = `-- name: GetTunnelByUsername :one
 select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where username = ?
 `

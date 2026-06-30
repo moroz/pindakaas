@@ -11,3 +11,6 @@ select * from tunnels where username = ?;
 
 -- name: ListTunnelsForUser :many
 select * from tunnels where user_id = ? order by id;
+
+-- name: DeleteTunnelForUser :exec
+delete from tunnels where id = ? and user_id = ?;

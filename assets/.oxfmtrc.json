@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [],
+  "sortTailwindcss": {
+    "stylesheet": "./src/style.css",
+    "functions": ["clsx", "cn", "twmerge.Merge", "Class"],
+    "preserveWhitespace": true
+  }
+}
