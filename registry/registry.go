@@ -47,3 +47,8 @@ func (r *Registry) GetTunnelForSubdomain(subdomain string) (*types.Tunnel, bool)
 	}
 	return tunnel.(*types.Tunnel), ok
 }
+
+func (r *Registry) GetTunnelStatus(subdomain string) bool {
+	_, ok := r.connections.Load(subdomain)
+	return ok
+}

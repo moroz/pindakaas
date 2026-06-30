@@ -1,6 +1,6 @@
 begin;
 insert into users (id, email)
-values ('019f12cb-b476-77d1-9317-24b1b19aa6ca', 'karol@moroz.dev')
+values ('019f12cb-b476-77d1-9317-24b1b19aa6ca', 'karol@virtualq.io')
 on conflict (email) do nothing;
 
 insert into tunnels (id, subdomain, username, password_hash, user_id)

@@ -2,6 +2,7 @@ package layout
 
 import (
 	"github.com/moroz/pindakaas/types"
+	"github.com/moroz/pindakaas/web/templates/components"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -24,7 +25,12 @@ func AppHeader(ctx *types.RequestContext, title string, actions ...Node) Node {
 				Action("/sign-out"),
 				Method("POST"),
 				Input(Type("hidden"), Name("_method"), Value("DELETE")),
-				Button(Class("button secondary"), Type("submit"), Text("Sign out")),
+				Button(Class("button secondary gap-2"), Type("submit"),
+					components.Icon(&components.IconProps{
+						Name: "person-through-window",
+					}),
+					Text("Sign out"),
+				),
 			),
 		),
 	)

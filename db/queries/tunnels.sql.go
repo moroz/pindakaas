@@ -7,6 +7,8 @@ package queries
 
 import (
 	"context"
+
+	uuid "github.com/google/uuid"
 )
 
 const getTunnelByUsername = `-- name: GetTunnelByUsername :one
@@ -34,6 +36,41 @@ select id, subdomain, username, password_hash, inserted_at, updated_at, user_id 
 
 func (q *Queries) ListTunnels(ctx context.Context) ([]*Tunnel, error) {
 	rows, err := q.db.QueryContext(ctx, listTunnels)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Tunnel
+	for rows.Next() {
+		var i Tunnel
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subdomain,
+			&i.Username,
+			&i.PasswordHash,
+			&i.InsertedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTunnelsForUser = `-- name: ListTunnelsForUser :many
+select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where user_id = ? order by id
+`
+
+func (q *Queries) ListTunnelsForUser(ctx context.Context, userID uuid.UUID) ([]*Tunnel, error) {
+	rows, err := q.db.QueryContext(ctx, listTunnelsForUser, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,6 @@ import (
 
 	"github.com/moroz/pindakaas/config"
 	"github.com/moroz/pindakaas/db/queries"
-	"github.com/moroz/pindakaas/registry"
 	"github.com/moroz/pindakaas/services"
 	"github.com/moroz/pindakaas/types"
 	"golang.org/x/crypto/ssh"
@@ -21,11 +20,11 @@ import (
 
 type SSHServer struct {
 	serverConfig *ssh.ServerConfig
-	hostService  *services.HostService
-	connRegistry *registry.Registry
+	hostService  *services.TunnelService
+	connRegistry types.TunnelRegistry
 }
 
-func New(db queries.DBTX, connRegistry *registry.Registry) (*SSHServer, error) {
+func New(db queries.DBTX, connRegistry types.TunnelRegistry) (*SSHServer, error) {
 	algorithms := ssh.SupportedAlgorithms()
 
 	serverConfig := &ssh.ServerConfig{
@@ -51,7 +50,7 @@ func New(db queries.DBTX, connRegistry *registry.Registry) (*SSHServer, error) {
 
 	server := &SSHServer{
 		serverConfig: serverConfig,
-		hostService:  services.NewHostService(db),
+		hostService:  services.NewTunnelService(db, connRegistry),
 		connRegistry: connRegistry,
 	}
 

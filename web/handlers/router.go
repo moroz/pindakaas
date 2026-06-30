@@ -49,7 +49,7 @@ func Router(props *RouterProps) http.Handler {
 		sessions := SessionController(props.DB)
 		r.DELETE("/sign-out", sessions.Delete)
 
-		tunnels := TunnelController(props.DB)
+		tunnels := TunnelController(props.DB, props.TunnelRegistry)
 		r.GET("/", tunnels.Index)
 	})
 

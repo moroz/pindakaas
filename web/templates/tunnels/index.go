@@ -3,7 +3,6 @@ package tunnels
 import (
 	"time"
 
-	"github.com/moroz/pindakaas/db/queries"
 	"github.com/moroz/pindakaas/types"
 	"github.com/moroz/pindakaas/web/templates/components"
 	"github.com/moroz/pindakaas/web/templates/layout"
@@ -12,7 +11,25 @@ import (
 )
 
 type IndexProps struct {
-	Tunnels []*queries.Tunnel
+	Tunnels []*types.TunnelListDTO
+}
+
+func statusBadge(active bool) Node {
+	class := "badge inactive"
+	icon := "bed"
+	text := "Inactive"
+	if active {
+		class = "badge active"
+		icon = "person-running"
+		text = "Online"
+	}
+	return Span(
+		Class(class),
+		components.Icon(&components.IconProps{
+			Name: icon,
+		}),
+		Text(text),
+	)
 }
 
 func Index(ctx *types.RequestContext, data *IndexProps) Node {
@@ -33,13 +50,9 @@ func Index(ctx *types.RequestContext, data *IndexProps) Node {
 				),
 			),
 			TBody(
-				Map(data.Tunnels, func(tunnel *queries.Tunnel) Node {
+				Map(data.Tunnels, func(tunnel *types.TunnelListDTO) Node {
 					return Tr(
-						Td(
-							components.Icon(&components.IconProps{
-								Name: "bed",
-							}),
-						),
+						Td(statusBadge(tunnel.Active)),
 						Td(Class("font-mono"), Text(tunnel.Subdomain)),
 						Td(Class("font-mono"), Text(tunnel.Username)),
 						Td(Text(tunnel.InsertedAt.Format(time.RFC3339))),
