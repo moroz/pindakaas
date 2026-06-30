@@ -52,7 +52,7 @@ func randomHex(length int) (string, error) {
 	return hex.EncodeToString(buf[:]), err
 }
 
-func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.User) (*types.TunnelCreateDTO, error) {
+func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.User) (*types.TunnelDetailDTO, error) {
 	subdomain, err := GenerateTunnelName()
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (s *TunnelService) CreateTunnelForUser(ctx context.Context, user *queries.U
 		return nil, err
 	}
 
-	return &types.TunnelCreateDTO{
+	return &types.TunnelDetailDTO{
 		Tunnel:            tunnel,
 		PlaintextPassword: password,
 	}, nil
@@ -110,7 +110,20 @@ func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.Us
 
 func (s *TunnelService) DeleteTunnel(ctx context.Context, tunnelId uuid.UUID, user *queries.User) error {
 	return queries.New(s.db).DeleteTunnelForUser(ctx, &queries.DeleteTunnelForUserParams{
-		ID:     tunnelId,
-		UserID: user.ID,
+		TunnelID: tunnelId,
+		UserID:   user.ID,
 	})
+}
+
+func (s *TunnelService) GetTunnelForUser(ctx context.Context, tunnelId uuid.UUID, user *queries.User) (*types.TunnelDetailDTO, error) {
+	data, err := queries.New(s.db).GetTunnelForUser(ctx, &queries.GetTunnelForUserParams{
+		TunnelID: tunnelId,
+		UserID:   user.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &types.TunnelDetailDTO{
+		Tunnel: data,
+	}, nil
 }

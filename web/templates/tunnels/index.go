@@ -1,6 +1,7 @@
 package tunnels
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moroz/pindakaas/config"
@@ -68,6 +69,7 @@ func Index(ctx *types.RequestContext, data *IndexProps) Node {
 					Map(data.Tunnels, func(tunnel *types.TunnelListDTO) Node {
 						fqdn := "https://" + tunnel.Subdomain + "." + config.BaseDomain
 						return Tr(
+							Data("url", fmt.Sprintf("/tunnels/%s", tunnel.ID)),
 							Td(statusBadge(tunnel.Active)),
 							Td(
 								Class("font-mono text-center"),

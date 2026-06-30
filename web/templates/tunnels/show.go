@@ -9,7 +9,7 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-func Show(ctx *types.RequestContext, data *types.TunnelCreateDTO) Node {
+func Show(ctx *types.RequestContext, data *types.TunnelDetailDTO) Node {
 	fqdn := "https://" + data.Subdomain + "." + config.BaseDomain
 	return layout.AppLayout(ctx, "New Tunnel",
 		H2(Class("text-2xl font-bold my-4"), Text("New Tunnel")),

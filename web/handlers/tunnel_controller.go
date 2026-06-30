@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 
@@ -47,6 +48,22 @@ func (cc *tunnelController) Index(c *echo.Context) error {
 	return tunnels.Index(ctx, &tunnels.IndexProps{
 		Tunnels: data,
 	}).Render(c.Response())
+}
+
+func (cc *tunnelController) Show(c *echo.Context) error {
+	ctx := helpers.GetRequestContext(c)
+
+	id, err := uuid.Parse(c.Param("tunnel_id"))
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	tunnel, err := cc.tunnelService.GetTunnelForUser(c.Request().Context(), id, ctx.User)
+	if errors.Is(err, sql.ErrNoRows) {
+		return echo.ErrNotFound
+	}
+
+	return tunnels.Show(ctx, tunnel).Render(c.Response())
 }
 
 func (cc *tunnelController) Delete(c *echo.Context) error {

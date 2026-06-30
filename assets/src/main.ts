@@ -4,3 +4,9 @@ import "htmx.org";
 document.querySelectorAll<HTMLElement>("[data-copy]").forEach((btn) => {
   btn.addEventListener("click", () => navigator.clipboard.writeText(btn.dataset.copy!));
 });
+
+document.querySelectorAll<HTMLElement>("[data-url]").forEach((row) => {
+  row.addEventListener("click", () => {
+    location.href = row.dataset.url!;
+  });
+});

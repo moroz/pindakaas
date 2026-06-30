@@ -18,6 +18,10 @@
     tbody td {
       @apply text-center font-mono;
     }
+
+    tr[data-url] {
+      @apply cursor-pointer hover:bg-slate-200;
+    }
   }
 
   .pindakaas-bg {

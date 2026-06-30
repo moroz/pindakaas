@@ -16,12 +16,12 @@ delete from tunnels where id = ? and user_id = ?
 `
 
 type DeleteTunnelForUserParams struct {
-	ID     uuid.UUID
-	UserID uuid.UUID
+	TunnelID uuid.UUID
+	UserID   uuid.UUID
 }
 
 func (q *Queries) DeleteTunnelForUser(ctx context.Context, arg *DeleteTunnelForUserParams) error {
-	_, err := q.db.ExecContext(ctx, deleteTunnelForUser, arg.ID, arg.UserID)
+	_, err := q.db.ExecContext(ctx, deleteTunnelForUser, arg.TunnelID, arg.UserID)
 	return err
 }
 
@@ -31,6 +31,30 @@ select id, subdomain, username, password_hash, inserted_at, updated_at, user_id 
 
 func (q *Queries) GetTunnelByUsername(ctx context.Context, username string) (*Tunnel, error) {
 	row := q.db.QueryRowContext(ctx, getTunnelByUsername, username)
+	var i Tunnel
+	err := row.Scan(
+		&i.ID,
+		&i.Subdomain,
+		&i.Username,
+		&i.PasswordHash,
+		&i.InsertedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+	)
+	return &i, err
+}
+
+const getTunnelForUser = `-- name: GetTunnelForUser :one
+select id, subdomain, username, password_hash, inserted_at, updated_at, user_id from tunnels where id = ? and user_id = ?
+`
+
+type GetTunnelForUserParams struct {
+	TunnelID uuid.UUID
+	UserID   uuid.UUID
+}
+
+func (q *Queries) GetTunnelForUser(ctx context.Context, arg *GetTunnelForUserParams) (*Tunnel, error) {
+	row := q.db.QueryRowContext(ctx, getTunnelForUser, arg.TunnelID, arg.UserID)
 	var i Tunnel
 	err := row.Scan(
 		&i.ID,

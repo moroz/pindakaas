@@ -7,7 +7,7 @@ type TunnelListDTO struct {
 	Active bool
 }
 
-type TunnelCreateDTO struct {
+type TunnelDetailDTO struct {
 	*queries.Tunnel
 	PlaintextPassword string
 }
