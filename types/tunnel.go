@@ -2,10 +2,12 @@ package types
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -31,11 +33,50 @@ type Tunnel struct {
 	BindAddr      string
 	BindPort      uint32
 	AllocatedPort uint32
+
+	// logMu guards logSink, the destination for human-readable forwarding logs.
+	// It is set when an interactive SSH session (e.g. `ssh -tt`) attaches and
+	// cleared when that session ends. nil means no one is watching.
+	logMu   sync.Mutex
+	logSink chan<- string
 }
 
 var (
 	_ http.RoundTripper = &Tunnel{}
 )
+
+// AttachLogSink directs forwarding logs to ch until DetachLogSink is called.
+// The caller owns ch and is responsible for draining it.
+func (t *Tunnel) AttachLogSink(ch chan<- string) {
+	t.logMu.Lock()
+	t.logSink = ch
+	t.logMu.Unlock()
+}
+
+// DetachLogSink stops forwarding logs to ch, but only if it is still the active
+// sink, so a stale session tearing down cannot detach a newer one.
+func (t *Tunnel) DetachLogSink(ch chan<- string) {
+	t.logMu.Lock()
+	if t.logSink == ch {
+		t.logSink = nil
+	}
+	t.logMu.Unlock()
+}
+
+// Logf sends a line to the attached log sink, if any. The send is non-blocking:
+// when no session is watching, or the watcher's buffer is full, the line is
+// dropped rather than slowing down request forwarding.
+func (t *Tunnel) Logf(format string, args ...any) {
+	t.logMu.Lock()
+	defer t.logMu.Unlock()
+	if t.logSink == nil {
+		return
+	}
+	select {
+	case t.logSink <- fmt.Sprintf(format, args...):
+	default:
+	}
+}
 
 func (t *Tunnel) OpenForwardingChannel(originAddr string, originPort uint32) (ForwardedConn, <-chan *ssh.Request, error) {
 	payload := ssh.Marshal(OpenForwardingChannelPayload{
@@ -111,6 +152,8 @@ func (t *Tunnel) RoundTrip(r *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	t.Logf("%s %s -> %d", r.Method, r.URL.RequestURI(), resp.StatusCode)
 
 	if resp.StatusCode == http.StatusSwitchingProtocols {
 		resp.Body = &forwardedRWC{r: br, channel: channel}

@@ -1,6 +1,7 @@
 package sshserver
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -95,14 +96,22 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 
 	host := conn.Permissions.ExtraData["host"].(*queries.Tunnel)
 
+	// One tunnel per connection, shared between the request-forwarding handler
+	// (which fills in the bind details and registers it) and the session
+	// handler (which streams its forwarding logs to an interactive client).
+	tunnel := &types.Tunnel{Conn: conn}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	go func() {
+		defer wg.Done()
+
 		for req := range reqs {
-			if req.Type != "tcpip-forward" && req.WantReply {
-				log.Printf("Rejecting request %s", req.Type)
-				req.Reply(false, nil)
+			if req.Type != "tcpip-forward" {
+				if req.WantReply {
+					req.Reply(false, nil)
+				}
 				continue
 			}
 
@@ -115,34 +124,107 @@ func (s *SSHServer) handleConn(newConnection net.Conn) {
 
 			log.Printf("Forwarding request: %v", request)
 
-			tunnel := &types.Tunnel{
-				Conn:          conn,
-				BindAddr:      request.BindAddr,
-				BindPort:      request.BindPort,
-				AllocatedPort: 42069,
-			}
+			tunnel.BindAddr = request.BindAddr
+			tunnel.BindPort = request.BindPort
+			tunnel.AllocatedPort = 42069
 			s.connRegistry.RegisterConnection(host.Subdomain, tunnel)
 			defer s.connRegistry.DeregisterConnection(host.Subdomain, tunnel)
 
 			response := ssh.Marshal(types.RequestPortForwardingSuccessPayload{BindPort: tunnel.AllocatedPort})
 			req.Reply(true, response)
 		}
-
-		wg.Done()
 	}()
 
-	// Reject all channels for now
 	go func() {
-		for newChan := range chans {
-			newChan.Reject(ssh.UnknownChannelType, "")
-		}
+		defer wg.Done()
 
-		wg.Done()
+		for newChan := range chans {
+			// Accept interactive sessions (`ssh -tt`) to stream forwarding
+			// logs; reject everything else.
+			if newChan.ChannelType() != "session" {
+				newChan.Reject(ssh.UnknownChannelType, "")
+				continue
+			}
+
+			go handleSession(newChan, host.Subdomain, tunnel)
+		}
 	}()
 
 	wg.Wait()
 
 	log.Printf("Connection closed")
+}
+
+// handleSession accepts an interactive session channel and streams the tunnel's
+// forwarding logs to the client's terminal until the session is closed. It is
+// read-only: anything the user types is discarded.
+func handleSession(newChan ssh.NewChannel, subdomain string, tunnel *types.Tunnel) {
+	channel, requests, err := newChan.Accept()
+	if err != nil {
+		log.Print("Failed to accept session channel: ", err)
+		return
+	}
+	defer channel.Close()
+
+	// Watch client input for Ctrl-C (0x03) / Ctrl-D (0x04) so the user can
+	// disconnect, and otherwise discard keystrokes (this is a read-only log
+	// view). There is no PTY on this side to turn ^C into a signal, so we have
+	// to close the session ourselves when we see one.
+	go func() {
+		buf := make([]byte, 256)
+		for {
+			n, err := channel.Read(buf)
+			if err != nil {
+				return
+			}
+			if bytes.ContainsAny(buf[:n], "\x03\x04") {
+				// Report that the "command" exited so the client disconnects
+				// cleanly on the first keypress. Without an exit-status OpenSSH
+				// hangs and needs a second Ctrl-C to abort locally.
+				channel.SendRequest("exit-status", false, ssh.Marshal(struct{ Status uint32 }{0}))
+				channel.Close()
+				return
+			}
+		}
+	}()
+
+	lines := make(chan string, 64)
+	done := make(chan struct{})
+
+	// Write buffered log lines to the terminal until the session ends. Lines
+	// use CRLF because `ssh -tt` puts the client terminal in raw mode.
+	go func() {
+		for {
+			select {
+			case line := <-lines:
+				fmt.Fprint(channel, line+"\r\n")
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	attached := false
+	for req := range requests {
+		switch req.Type {
+		case "pty-req", "shell", "exec":
+			if req.WantReply {
+				req.Reply(true, nil)
+			}
+			if !attached {
+				attached = true
+				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with ~. or Ctrl-C.\r\n", subdomain)
+				tunnel.AttachLogSink(lines)
+			}
+		default:
+			if req.WantReply {
+				req.Reply(false, nil)
+			}
+		}
+	}
+
+	tunnel.DetachLogSink(lines)
+	close(done)
 }
 
 func (s *SSHServer) authenticateConnection(conn ssh.ConnMetadata) (*ssh.Permissions, error) {
