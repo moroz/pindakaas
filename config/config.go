@@ -73,6 +73,11 @@ var SSHPort = MustParsePortNumber(GetenvWithDefault("SSH_PORT", "42069"))
 var HTTPPort = MustParsePortNumber(GetenvWithDefault("HTTP_PORT", "8080"))
 var HTTPSPort = MustParsePortNumber(GetenvWithDefault("HTTPS_PORT", "8081"))
 
+// DisableHTTP2, when set via DISABLE_HTTP2="true", prevents the HTTPS server
+// from negotiating "h2" via ALPN. HTTP/2 connections are not hijackable, so
+// WebSocket upgrades require HTTP/1.1; disable HTTP/2 if you proxy WebSockets.
+var DisableHTTP2 = GetenvWithDefault("DISABLE_HTTP2", "") == "true"
+
 var TLSCertFile = MustGetenv("TLS_CERT_FILE")
 var TLSKeyFile = MustGetenv("TLS_KEY_FILE")
 

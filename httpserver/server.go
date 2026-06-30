@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"log/slog"
@@ -100,5 +101,14 @@ func (s *HTTPServer) ListenAndServeTLS(ctx context.Context, port uint16, certFil
 		listener.Close()
 	}()
 
-	return http.ServeTLS(listener, s, certFile, keyFile)
+	srv := &http.Server{Handler: s}
+
+	// When DISABLE_HTTP2 is set, a non-nil, empty TLSNextProto map prevents the
+	// server from negotiating "h2" via ALPN. HTTP/2 connections are not
+	// hijackable, so WebSocket upgrades require HTTP/1.1.
+	if config.DisableHTTP2 {
+		srv.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+	}
+
+	return srv.ServeTLS(listener, certFile, keyFile)
 }
