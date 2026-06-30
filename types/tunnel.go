@@ -34,33 +34,54 @@ type Tunnel struct {
 	BindPort      uint32
 	AllocatedPort uint32
 
-	// logMu guards logSink, the destination for human-readable forwarding logs.
-	// It is set when an interactive SSH session (e.g. `ssh -tt`) attaches and
-	// cleared when that session ends. nil means no one is watching.
+	// logMu guards the interactive session attachment. It is set when a session
+	// (e.g. `ssh -tt`) attaches and cleared when that session ends.
+	//   - logSink receives buffered, high-frequency forwarding logs.
+	//   - session is the channel itself, for synchronous one-off notifications.
+	// Both nil means no one is watching.
 	logMu   sync.Mutex
 	logSink chan<- string
+	session io.Writer
 }
 
 var (
 	_ http.RoundTripper = &Tunnel{}
 )
 
-// AttachLogSink directs forwarding logs to ch until DetachLogSink is called.
-// The caller owns ch and is responsible for draining it.
-func (t *Tunnel) AttachLogSink(ch chan<- string) {
+// AttachSession directs forwarding logs to ch (drained by the caller) and one-off
+// notifications to w, until DetachSession is called.
+func (t *Tunnel) AttachSession(w io.Writer, ch chan<- string) {
 	t.logMu.Lock()
+	t.session = w
 	t.logSink = ch
 	t.logMu.Unlock()
 }
 
-// DetachLogSink stops forwarding logs to ch, but only if it is still the active
-// sink, so a stale session tearing down cannot detach a newer one.
-func (t *Tunnel) DetachLogSink(ch chan<- string) {
+// DetachSession stops streaming to ch, but only if it is still the active sink,
+// so a stale session tearing down cannot detach a newer one.
+func (t *Tunnel) DetachSession(ch chan<- string) {
 	t.logMu.Lock()
 	if t.logSink == ch {
 		t.logSink = nil
+		t.session = nil
 	}
 	t.logMu.Unlock()
+}
+
+// Notify writes a one-off message directly to the attached interactive session,
+// synchronously, so it is delivered even when the connection is about to be
+// closed (e.g. on eviction) and a buffered log line would be lost. It is a
+// no-op when no session is attached. The write is done without holding logMu so
+// a stuck terminal cannot block forwarding; writing to a closed channel simply
+// errors and is ignored.
+func (t *Tunnel) Notify(format string, args ...any) {
+	t.logMu.Lock()
+	w := t.session
+	t.logMu.Unlock()
+	if w == nil {
+		return
+	}
+	fmt.Fprintf(w, format+"\r\n", args...)
 }
 
 // Logf sends a line to the attached log sink, if any. The send is non-blocking:

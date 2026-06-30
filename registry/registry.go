@@ -28,6 +28,7 @@ func (r *Registry) RegisterConnection(subdomain string, tunnel *types.Tunnel) {
 	if loaded {
 		old := previous.(*types.Tunnel)
 		slog.Info("Evicting existing tunnel for subdomain", "subdomain", subdomain)
+		old.Notify("This tunnel was taken over by a new connection from elsewhere. Disconnecting.")
 		old.Conn.Close()
 	}
 }

@@ -7,11 +7,16 @@ import (
 )
 
 func RootLayout(ctx *types.RequestContext, title string, children ...Node) Node {
+	pageTitle := "Pindakaas"
+	if title != "" {
+		pageTitle = title + " | " + pageTitle
+	}
+
 	return HTML(
 		Lang("en"),
 		Head(
 			Meta(Charset("UTF-8")),
-			TitleEl(Text("Pindakaas")),
+			TitleEl(Text(pageTitle)),
 			AssetEntryPoint(ctx),
 		),
 		Body(Group(children)),
@@ -20,26 +25,12 @@ func RootLayout(ctx *types.RequestContext, title string, children ...Node) Node 
 
 func AppLayout(ctx *types.RequestContext, title string, children ...Node) Node {
 	return RootLayout(ctx, title,
-		Header(
-			Class("h-20 bg-blue-600 text-white shadow fixed top-0 left-0 right-0"),
-			Div(
-				Class("container mx-auto flex justify-between items-center h-full"),
-				H1(Class("text-3xl font-bold my-4"), Text("Pindakaas")),
-				Div(
-					Class("text-right"),
-					Span(
-						Text(*ctx.User.GivenName+" "+*ctx.User.FamilyName),
-						Br(),
-						Text(ctx.User.Email),
-					),
-				),
-			),
-		),
 
 		Div(
 			Class("container mx-auto pt-24"),
 			Header(
 				Class("flex justify-between items-center"),
+				H2(Class("text-2xl font-bold my-4"), Text(title)),
 			),
 
 			Group(children),

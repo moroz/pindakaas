@@ -219,7 +219,7 @@ func handleSession(newChan ssh.NewChannel, subdomain string, tunnel *types.Tunne
 					url = net.JoinHostPort(url, strconv.Itoa(int(config.HTTPSPort)))
 				}
 				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with ~. or Ctrl-C.\r\n", url)
-				tunnel.AttachLogSink(lines)
+				tunnel.AttachSession(channel, lines)
 			}
 		default:
 			if req.WantReply {
@@ -228,7 +228,7 @@ func handleSession(newChan ssh.NewChannel, subdomain string, tunnel *types.Tunne
 		}
 	}
 
-	tunnel.DetachLogSink(lines)
+	tunnel.DetachSession(lines)
 	close(done)
 }
 
@@ -238,7 +238,13 @@ func (s *SSHServer) authenticateConnection(conn ssh.ConnMetadata) (*ssh.Permissi
 
 	host, err := s.hostService.AuthenticateHostBySSHUsername(ctx, conn.User())
 	if err != nil {
-		return nil, err
+		// Returning a BannerError sends the message to the client as an SSH
+		// userauth banner (shown by OpenSSH), so the user sees why the
+		// connection was rejected instead of a bare "Permission denied".
+		return nil, &ssh.BannerError{
+			Err:     err,
+			Message: "Authentication failed: invalid credentials.\n",
+		}
 	}
 
 	return &ssh.Permissions{
