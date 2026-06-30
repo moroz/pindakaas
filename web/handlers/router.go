@@ -17,6 +17,15 @@ type RouterProps struct {
 	TunnelRegistry types.TunnelRegistry
 }
 
+type Groupie interface {
+	Group(string, ...echo.MiddlewareFunc) *echo.Group
+}
+
+func Group(r Groupie, prefix string, cb func(r *echo.Group)) {
+	group := r.Group(prefix)
+	cb(group)
+}
+
 func Router(props *RouterProps) http.Handler {
 	r := echo.New()
 
@@ -30,12 +39,25 @@ func Router(props *RouterProps) http.Handler {
 	r.Use(FetchSessionFromCookies(props.Store, config.SessionCookieName))
 	r.Use(FetchUserFromSession(props.DB))
 
-	tunnels := TunnelController(props.DB)
-	r.GET("/", tunnels.Index)
+	// Authenticated routes
+	Group(r, "", func(r *echo.Group) {
+		r.Use(RequireAuthenticatedUser)
 
-	oauth2 := OIDCController(props.DB)
-	r.GET("/oauth/google/redirect", oauth2.Redirect)
-	r.GET("/oauth/google/callback", oauth2.Callback)
+		tunnels := TunnelController(props.DB)
+		r.GET("/", tunnels.Index)
+	})
+
+	// Unauthenticated-only routes
+	Group(r, "", func(r *echo.Group) {
+		r.Use(RedirectToHomeIfAuthenticated)
+
+		sessions := SessionController()
+		r.GET("/sign-in", sessions.New)
+
+		oauth2 := OIDCController(props.DB)
+		r.GET("/oauth/google/redirect", oauth2.Redirect)
+		r.GET("/oauth/google/callback", oauth2.Callback)
+	})
 
 	if config.IsProd {
 		r.Static("/assets", "assets/dist/assets", CacheControlMiddleware)

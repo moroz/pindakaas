@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -62,5 +63,29 @@ func CacheControlMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		return next(c)
+	}
+}
+
+func RequireAuthenticatedUser(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		ctx := helpers.GetRequestContext(c)
+
+		if ctx.User != nil {
+			return next(c)
+		}
+
+		return c.Redirect(http.StatusSeeOther, "/sign-in")
+	}
+}
+
+func RedirectToHomeIfAuthenticated(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		ctx := helpers.GetRequestContext(c)
+
+		if ctx.User == nil {
+			return next(c)
+		}
+
+		return c.Redirect(http.StatusSeeOther, "/")
 	}
 }

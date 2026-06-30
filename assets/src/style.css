@@ -10,6 +10,6 @@
     }
 
     tbody td {
-        @apply font-mono;
+        @apply font-mono text-center;
     }
 }

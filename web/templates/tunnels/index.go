@@ -15,9 +15,7 @@ type IndexProps struct {
 }
 
 func Index(ctx *types.RequestContext, data *IndexProps) Node {
-	return layout.RootLayout(ctx, "Tunnels", Div(
-		H1(Class("text-3xl font-bold"), Text("Tunnels")),
-
+	return layout.AppLayout(ctx, "Tunnels", Div(
 		Table(
 			Class("index-table w-full"),
 			THead(
