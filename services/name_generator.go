@@ -12,9 +12,9 @@ import (
 var adjectivesRaw string
 var adjectives = strings.Fields(adjectivesRaw)
 
-//go:embed animals.txt
-var animalsRaw string
-var animals = strings.Fields(animalsRaw)
+//go:embed nouns.txt
+var nounsRaw string
+var animals = strings.Fields(nounsRaw)
 
 func GenerateTunnelName() (string, error) {
 	i, err := rand.Int(rand.Reader, big.NewInt(int64(len(adjectives))))

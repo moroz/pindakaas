@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"strconv"
 	"strings"
 
 	"github.com/moroz/pindakaas/config"
@@ -73,6 +74,20 @@ func (s *HTTPServer) ServeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
+func (s *HTTPServer) httpsRedirectHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		host := r.Host
+		if h, _, err := net.SplitHostPort(r.Host); err == nil {
+			host = h
+		}
+		httpsHost := host
+		if config.HTTPSPort != 443 {
+			httpsHost = net.JoinHostPort(host, strconv.Itoa(int(config.HTTPSPort)))
+		}
+		http.Redirect(w, r, "https://"+httpsHost+r.URL.RequestURI(), http.StatusMovedPermanently)
+	})
+}
+
 func (s *HTTPServer) ListenAndServe(ctx context.Context, port uint16) error {
 	listenOn := config.FormatHostPort(port)
 	listener, err := net.Listen("tcp", listenOn)
@@ -87,7 +102,11 @@ func (s *HTTPServer) ListenAndServe(ctx context.Context, port uint16) error {
 		listener.Close()
 	}()
 
-	return http.Serve(listener, s)
+	handler := http.Handler(s)
+	if config.IsProd {
+		handler = s.httpsRedirectHandler()
+	}
+	return http.Serve(listener, handler)
 }
 
 func (s *HTTPServer) ListenAndServeTLS(ctx context.Context, port uint16, certFile, keyFile string) error {
@@ -104,7 +123,14 @@ func (s *HTTPServer) ListenAndServeTLS(ctx context.Context, port uint16, certFil
 		listener.Close()
 	}()
 
-	srv := &http.Server{Handler: s}
+	var tlsHandler http.Handler = s
+	if config.IsProd {
+		tlsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+			s.ServeHTTP(w, r)
+		})
+	}
+	srv := &http.Server{Handler: tlsHandler}
 
 	// When DISABLE_HTTP2 is set, a non-nil, empty TLSNextProto map prevents the
 	// server from negotiating "h2" via ALPN. HTTP/2 connections are not

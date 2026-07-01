@@ -41,7 +41,7 @@
   <table class="index-table w-full">
     <thead>
       <tr>
-        <th class="w-32 text-center">Status</th>
+        <th class="w-40 text-center">Status</th>
         <th class="w-32 text-center">Username</th>
         <th>Subdomain</th>
         <th class="w-58 text-right">Created at</th>
