@@ -213,11 +213,11 @@ func handleSession(newChan ssh.NewChannel, subdomain string, tunnel *types.Tunne
 			}
 			if !attached {
 				attached = true
-				url := fmt.Sprintf("https://%s.%s", subdomain, config.BaseDomain)
+				url := fmt.Sprintf("%s.%s", subdomain, config.BaseDomain)
 				if config.HTTPSPort != 443 {
 					url = net.JoinHostPort(url, strconv.Itoa(int(config.HTTPSPort)))
 				}
-				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with ~. or Ctrl-C.\r\n", url)
+				fmt.Fprintf(channel, "Streaming forwarding logs for %q. Disconnect with Ctrl-C.\r\n", "https://"+url)
 				tunnel.AttachSession(channel, lines)
 			}
 		default:

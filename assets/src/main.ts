@@ -3,10 +3,16 @@ import "@fontsource-variable/ibm-plex-sans/wght.css";
 import "temporal-polyfill/global";
 import { mount } from "svelte";
 import "./style.css";
-import TunnelIndex from "./tunnel-index.svelte";
+import TunnelIndex from "./components/TunnelIndex.svelte";
+import CopyButton from "./components/CopyButton.svelte";
 
 document.querySelectorAll<HTMLElement>("[data-copy]").forEach((btn) => {
-  btn.addEventListener("click", () => navigator.clipboard.writeText(btn.dataset.copy!));
+  const classNames = btn.dataset.class ?? "";
+
+  mount(CopyButton, {
+    props: { text: btn.dataset.copy!, class: classNames },
+    target: btn,
+  });
 });
 
 function initTable() {

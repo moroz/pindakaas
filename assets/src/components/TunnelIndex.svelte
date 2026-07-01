@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { TunnelListDTO } from "./interfaces";
-  import CopyButton from "./components/CopyButton.svelte";
-  import { fetchTunnels } from "./api/queries";
+  import type { TunnelListDTO } from "../interfaces";
+  import { fetchTunnels } from "../api/queries";
+  import StatusBadge from "./StatusBadge.svelte";
 
   let {
     tunnels: initialTunnels,
@@ -41,10 +41,10 @@
   <table class="index-table w-full">
     <thead>
       <tr>
-        <th class="w-32">Status</th>
+        <th class="w-32 text-center">Status</th>
+        <th class="w-32 text-center">Username</th>
         <th>Subdomain</th>
-        <th class="w-36">Username</th>
-        <th class="w-52">Created at</th>
+        <th class="w-58 text-right">Created at</th>
       </tr>
     </thead>
     <tbody>
@@ -53,26 +53,12 @@
           data-url="/tunnels/{tunnel.id}"
           onclick={() => (location.href = `/tunnels/${tunnel.id}`)}
         >
-          <td class="text-center">
-            <span class="badge" class:active={tunnel.active}>
-              {#if tunnel.active}
-                <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
-                  <use href="/assets/person-running.svg#icon" />
-                </svg>
-                Online
-              {:else}
-                <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
-                  <use href="/assets/bed.svg#icon" />
-                </svg>
-                Inactive
-              {/if}
-            </span>
-          </td>
-          <td>
+          <td class="text-center"><StatusBadge active={tunnel.active} /></td>
+          <td class="font-mono text-center">{tunnel.username}</td>
+          <td class="font-mono">
             <span title={fqdn(tunnel.subdomain)}>{tunnel.subdomain}</span>
           </td>
-          <td class="font-mono">{tunnel.username}</td>
-          <td class="font-mono text-slate-400"
+          <td class="text-slate-500 text-right"
             >{formatDate(tunnel.insertedAt)}</td
           >
         </tr>

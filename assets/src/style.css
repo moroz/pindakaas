@@ -3,16 +3,17 @@
 @config "../tailwind.config.js";
 
 @theme {
-  --color-primary: var(--color-blue-500);
+  --color-primary: var(--color-sky-600);
+  --color-link: var(--color-sky-700);
   --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", Roboto, sans-serif;
 }
 
 @layer components {
   .index-table {
-    @apply w-full border-collapse text-sm;
+    @apply w-full table-fixed border-collapse;
 
     th {
-      @apply px-4 py-3 text-left text-xs font-semibold tracking-wider text-slate-400 uppercase;
+      @apply px-4 py-3 text-left text-sm font-semibold tracking-wider text-slate-500 uppercase;
     }
 
     thead {
@@ -20,7 +21,7 @@
     }
 
     td {
-      @apply px-4 py-3 text-slate-700;
+      @apply px-4 py-2 text-slate-700;
     }
 
     tbody tr {
@@ -42,18 +43,14 @@
   }
 
   .button {
-    @apply inline-flex h-10 cursor-pointer items-center justify-center rounded-sm bg-primary px-4 text-center font-semibold text-white transition-colors;
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-1 rounded-sm bg-primary px-4 text-center font-sans font-semibold text-white transition-colors;
 
     :is(&).secondary {
       @apply bg-white text-black hover:bg-slate-200;
     }
   }
 
-  .badge {
-    @apply my-1 inline-flex gap-1 rounded-full bg-slate-200 px-3 py-1 font-sans font-bold text-slate-800 uppercase;
-
-    :is(&).active {
-      @apply bg-green-100 text-green-800;
-    }
+  a:is(.link) {
+    @apply text-blue-700 underline transition-colors visited:text-purple-800 hover:text-sky-600 visited:hover:text-purple-700;
   }
 }

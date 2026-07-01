@@ -21,7 +21,10 @@
 </script>
 
 <button
-  class={cn("button primary relative ml-2 font-sans h-8 px-2", className)}
+  class={cn(
+    "button secondary relative font-sans h-7 px-0 text-xs font-normal",
+    className,
+  )}
   onclick={copy}
 >
   <!-- Invisible ghost of the wider state — drives button width -->
@@ -35,7 +38,7 @@
   <!-- Copy state -->
   <span
     class={cn(
-      "absolute inset-0 flex items-center justify-center gap-1 transition-opacity duration-300",
+      "absolute inset-0 flex items-center justify-center gap-1 transition-opacity duration-150",
       success ? "opacity-0 pointer-events-none" : "opacity-100",
     )}
   >

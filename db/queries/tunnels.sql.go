@@ -104,43 +104,8 @@ func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*T
 	return &i, err
 }
 
-const listTunnels = `-- name: ListTunnels :many
-select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels order by id
-`
-
-func (q *Queries) ListTunnels(ctx context.Context) ([]*Tunnel, error) {
-	rows, err := q.db.QueryContext(ctx, listTunnels)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*Tunnel
-	for rows.Next() {
-		var i Tunnel
-		if err := rows.Scan(
-			&i.ID,
-			&i.Subdomain,
-			&i.Username,
-			&i.PasswordEncrypted,
-			&i.InsertedAt,
-			&i.UpdatedAt,
-			&i.UserID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listTunnelsForUser = `-- name: ListTunnelsForUser :many
-select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels where user_id = ? order by id
+select id, subdomain, username, password_encrypted, inserted_at, updated_at, user_id from tunnels where user_id = ? order by id desc
 `
 
 func (q *Queries) ListTunnelsForUser(ctx context.Context, userID uuid.UUID) ([]*Tunnel, error) {
