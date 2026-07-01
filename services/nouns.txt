@@ -45,6 +45,7 @@ Kinkajou
 Ligma
 Lizard
 Llama
+Mammoth
 Manatee
 Marlin
 Meerkat
@@ -58,7 +59,9 @@ Okapi
 Pakicetus
 Phascogale
 Platypus
+Pleistocene
 Porcupine
+Prestidigitator
 Ptarmigan
 Quetzalcoatl
 Quokka
@@ -66,6 +69,7 @@ Raccoon
 Rhesus
 Salamander
 Shoebill
+Skunk
 Sloth
 Souffragette
 Sousaphone
