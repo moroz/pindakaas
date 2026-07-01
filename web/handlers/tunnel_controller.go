@@ -67,6 +67,22 @@ func (cc *tunnelController) Show(c *echo.Context) error {
 	return tunnels.Show(ctx, tunnel).Render(c.Response())
 }
 
+func (cc *tunnelController) APIIndex(c *echo.Context) error {
+	ctx := helpers.GetRequestContext(c)
+
+	data, err := cc.tunnelService.ListTunnelsForUser(c.Request().Context(), ctx.User)
+	if err != nil {
+		return err
+	}
+
+	tunnelJSON := make([]*types.TunnelJSON, len(data))
+	for i, t := range data {
+		tunnelJSON[i] = t.ToJSON()
+	}
+
+	return c.JSON(http.StatusOK, map[string]any{"data": tunnelJSON})
+}
+
 func (cc *tunnelController) Delete(c *echo.Context) error {
 	ctx := helpers.GetRequestContext(c)
 

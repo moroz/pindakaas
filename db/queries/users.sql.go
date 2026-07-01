@@ -20,9 +20,9 @@ and ut.token = ?2 and ut.context = ?3
 `
 
 type FindUserByUserTokenParams struct {
-	Validity int64
-	Token    []byte
-	Context  dbtypes.UserTokenContext
+	Validity int64                    `json:"validity"`
+	Token    []byte                   `json:"token"`
+	Context  dbtypes.UserTokenContext `json:"context"`
 }
 
 func (q *Queries) FindUserByUserToken(ctx context.Context, arg *FindUserByUserTokenParams) (*User, error) {
@@ -67,11 +67,11 @@ values (?, ?, ?, ?, ?) returning id, email, user_role, given_name, family_name, 
 `
 
 type InsertUserParams struct {
-	ID         uuid.UUID
-	Email      string
-	GivenName  *string
-	FamilyName *string
-	Avatar     *string
+	ID         uuid.UUID `json:"id"`
+	Email      string    `json:"email"`
+	GivenName  *string   `json:"givenName"`
+	FamilyName *string   `json:"familyName"`
+	Avatar     *string   `json:"avatar"`
 }
 
 func (q *Queries) InsertUser(ctx context.Context, arg *InsertUserParams) (*User, error) {
@@ -102,10 +102,10 @@ values (?, ?, ?, ?) returning id, user_id, token, context, inserted_at
 `
 
 type InsertUserTokenParams struct {
-	ID      uuid.UUID
-	UserID  uuid.UUID
-	Token   []byte
-	Context dbtypes.UserTokenContext
+	ID      uuid.UUID                `json:"id"`
+	UserID  uuid.UUID                `json:"userId"`
+	Token   []byte                   `json:"token"`
+	Context dbtypes.UserTokenContext `json:"context"`
 }
 
 func (q *Queries) InsertUserToken(ctx context.Context, arg *InsertUserTokenParams) (*UserToken, error) {
@@ -148,11 +148,11 @@ returning id, email, user_role, given_name, family_name, avatar, inserted_at, up
 `
 
 type UpsertUserParams struct {
-	ID         uuid.UUID
-	Email      string
-	GivenName  *string
-	FamilyName *string
-	Avatar     *string
+	ID         uuid.UUID `json:"id"`
+	Email      string    `json:"email"`
+	GivenName  *string   `json:"givenName"`
+	FamilyName *string   `json:"familyName"`
+	Avatar     *string   `json:"avatar"`
 }
 
 func (q *Queries) UpsertUser(ctx context.Context, arg *UpsertUserParams) (*User, error) {

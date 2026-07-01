@@ -6,16 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write src"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/vite": "^4.3.1",
     "oxfmt": "^0.56.0",
+    "prettier": "^3.9.4",
+    "prettier-plugin-svelte": "^4.1.1",
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0"
   },
   "dependencies": {
-    "htmx.org": "^2.0.10"
+    "clsx": "^2.1.1",
+    "svelte": "^5.56.4",
+    "tailwind-merge": "^3.6.0",
+    "temporal-polyfill": "^1.0.1"
   }
 }

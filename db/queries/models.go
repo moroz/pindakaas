@@ -11,30 +11,30 @@ import (
 )
 
 type Tunnel struct {
-	ID                uuid.UUID
-	Subdomain         string
-	Username          string
-	PasswordEncrypted sqlcrypter.EncryptedBytes
-	InsertedAt        dbtypes.UnixTimestamp
-	UpdatedAt         dbtypes.UnixTimestamp
-	UserID            uuid.UUID
+	ID                uuid.UUID                 `json:"id"`
+	Subdomain         string                    `json:"subdomain"`
+	Username          string                    `json:"username"`
+	PasswordEncrypted sqlcrypter.EncryptedBytes `json:"passwordEncrypted"`
+	InsertedAt        dbtypes.UnixTimestamp     `json:"insertedAt"`
+	UpdatedAt         dbtypes.UnixTimestamp     `json:"updatedAt"`
+	UserID            uuid.UUID                 `json:"userId"`
 }
 
 type User struct {
-	ID         uuid.UUID
-	Email      string
-	UserRole   interface{}
-	GivenName  *string
-	FamilyName *string
-	Avatar     *string
-	InsertedAt dbtypes.UnixTimestamp
-	UpdatedAt  dbtypes.UnixTimestamp
+	ID         uuid.UUID             `json:"id"`
+	Email      string                `json:"email"`
+	UserRole   interface{}           `json:"userRole"`
+	GivenName  *string               `json:"givenName"`
+	FamilyName *string               `json:"familyName"`
+	Avatar     *string               `json:"avatar"`
+	InsertedAt dbtypes.UnixTimestamp `json:"insertedAt"`
+	UpdatedAt  dbtypes.UnixTimestamp `json:"updatedAt"`
 }
 
 type UserToken struct {
-	ID         uuid.UUID
-	UserID     uuid.UUID
-	Token      []byte
-	Context    dbtypes.UserTokenContext
-	InsertedAt dbtypes.UnixTimestamp
+	ID         uuid.UUID                `json:"id"`
+	UserID     uuid.UUID                `json:"userId"`
+	Token      []byte                   `json:"token"`
+	Context    dbtypes.UserTokenContext `json:"context"`
+	InsertedAt dbtypes.UnixTimestamp    `json:"insertedAt"`
 }

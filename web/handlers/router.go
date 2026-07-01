@@ -54,6 +54,7 @@ func Router(props *RouterProps) http.Handler {
 		r.GET("/tunnels/:tunnel_id", tunnels.Show)
 		r.POST("/tunnels", tunnels.Create)
 		r.DELETE("/tunnels/:tunnel_id", tunnels.Delete)
+		r.GET("/api/tunnels", tunnels.APIIndex)
 	})
 
 	// Unauthenticated-only routes

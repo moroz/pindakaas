@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,9 +11,8 @@ export default defineConfig({
     // origin so they resolve to Vite, not the Go app serving the HTML.
     origin: "http://localhost:5173",
   },
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), svelte()],
   build: {
     manifest: true,
   },
 });
-

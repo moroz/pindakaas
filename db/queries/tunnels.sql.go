@@ -17,8 +17,8 @@ delete from tunnels where id = ? and user_id = ?
 `
 
 type DeleteTunnelForUserParams struct {
-	TunnelID uuid.UUID
-	UserID   uuid.UUID
+	TunnelID uuid.UUID `json:"tunnelId"`
+	UserID   uuid.UUID `json:"userId"`
 }
 
 func (q *Queries) DeleteTunnelForUser(ctx context.Context, arg *DeleteTunnelForUserParams) error {
@@ -50,8 +50,8 @@ select id, subdomain, username, password_encrypted, inserted_at, updated_at, use
 `
 
 type GetTunnelForUserParams struct {
-	TunnelID uuid.UUID
-	UserID   uuid.UUID
+	TunnelID uuid.UUID `json:"tunnelId"`
+	UserID   uuid.UUID `json:"userId"`
 }
 
 func (q *Queries) GetTunnelForUser(ctx context.Context, arg *GetTunnelForUserParams) (*Tunnel, error) {
@@ -76,11 +76,11 @@ returning id, subdomain, username, password_encrypted, inserted_at, updated_at, 
 `
 
 type InsertTunnelParams struct {
-	ID                uuid.UUID
-	Subdomain         string
-	Username          string
-	PasswordEncrypted sqlcrypter.EncryptedBytes
-	UserID            uuid.UUID
+	ID                uuid.UUID                 `json:"id"`
+	Subdomain         string                    `json:"subdomain"`
+	Username          string                    `json:"username"`
+	PasswordEncrypted sqlcrypter.EncryptedBytes `json:"passwordEncrypted"`
+	UserID            uuid.UUID                 `json:"userId"`
 }
 
 func (q *Queries) InsertTunnel(ctx context.Context, arg *InsertTunnelParams) (*Tunnel, error) {

@@ -1,12 +1,31 @@
+import "temporal-polyfill/global";
+import { mount } from "svelte";
 import "./style.css";
-import "htmx.org";
+import TunnelIndex from "./tunnel-index.svelte";
 
 document.querySelectorAll<HTMLElement>("[data-copy]").forEach((btn) => {
   btn.addEventListener("click", () => navigator.clipboard.writeText(btn.dataset.copy!));
 });
 
-document.querySelectorAll<HTMLElement>("[data-url]").forEach((row) => {
-  row.addEventListener("click", () => {
-    location.href = row.dataset.url!;
+function initTable() {
+  const propsEl = document.querySelector("#index-table-props");
+  if (!propsEl) return;
+
+  const target = document.querySelector("#svelte-root");
+  if (!target) return;
+
+  let initialProps;
+  try {
+    initialProps = JSON.parse(propsEl.innerHTML);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+  mount(TunnelIndex, {
+    props: initialProps,
+    target,
   });
-});
+}
+
+initTable();
