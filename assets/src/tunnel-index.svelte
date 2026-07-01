@@ -35,45 +35,48 @@
   }
 </script>
 
-<table class="index-table w-full">
-  <thead>
-    <tr>
-      <th>Active</th>
-      <th>Subdomain</th>
-      <th>Username</th>
-      <th>Created at</th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each tunnels as tunnel}
-      <tr
-        data-url="/tunnels/{tunnel.id}"
-        onclick={() => (location.href = `/tunnels/${tunnel.id}`)}
-      >
-        <td>
-          <span class="badge" class:active={tunnel.active}>
-            {#if tunnel.active}
-              <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
-                <use href="/assets/person-running.svg#icon" />
-              </svg>
-              Online
-            {:else}
-              <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
-                <use href="/assets/bed.svg#icon" />
-              </svg>
-              Inactive
-            {/if}
-          </span>
-        </td>
-        <td>
-          <div class="inline-flex items-center">
-            <span title={fqdn(tunnel.subdomain)}>{tunnel.subdomain}</span>
-            <CopyButton text={fqdn(tunnel.subdomain)} />
-          </div>
-        </td>
-        <td>{tunnel.username}</td>
-        <td>{formatDate(tunnel.insertedAt)}</td>
+<div
+  class="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm"
+>
+  <table class="index-table w-full">
+    <thead>
+      <tr>
+        <th class="w-32">Status</th>
+        <th>Subdomain</th>
+        <th class="w-36">Username</th>
+        <th class="w-52">Created at</th>
       </tr>
-    {/each}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {#each tunnels as tunnel}
+        <tr
+          data-url="/tunnels/{tunnel.id}"
+          onclick={() => (location.href = `/tunnels/${tunnel.id}`)}
+        >
+          <td class="text-center">
+            <span class="badge" class:active={tunnel.active}>
+              {#if tunnel.active}
+                <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
+                  <use href="/assets/person-running.svg#icon" />
+                </svg>
+                Online
+              {:else}
+                <svg class="fill-current w-5 h-5" viewBox="0 0 640 640">
+                  <use href="/assets/bed.svg#icon" />
+                </svg>
+                Inactive
+              {/if}
+            </span>
+          </td>
+          <td>
+            <span title={fqdn(tunnel.subdomain)}>{tunnel.subdomain}</span>
+          </td>
+          <td class="font-mono">{tunnel.username}</td>
+          <td class="font-mono text-slate-400"
+            >{formatDate(tunnel.insertedAt)}</td
+          >
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+</div>

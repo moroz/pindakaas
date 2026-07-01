@@ -1,3 +1,5 @@
+// Supports weights 100-700
+import "@fontsource-variable/ibm-plex-sans/wght.css";
 import "temporal-polyfill/global";
 import { mount } from "svelte";
 import "./style.css";

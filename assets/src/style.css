@@ -4,23 +4,31 @@
 
 @theme {
   --color-primary: var(--color-blue-500);
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", Roboto, sans-serif;
 }
 
 @layer components {
   .index-table {
-    @apply table-fixed;
+    @apply w-full border-collapse text-sm;
 
-    th,
-    td {
-      @apply h-8 border px-2;
+    th {
+      @apply px-4 py-3 text-left text-xs font-semibold tracking-wider text-slate-400 uppercase;
     }
 
-    tbody td {
-      @apply text-center font-mono;
+    thead {
+      @apply border-b border-slate-300;
+    }
+
+    td {
+      @apply px-4 py-3 text-slate-700;
+    }
+
+    tbody tr {
+      @apply border-b border-slate-200 transition-colors duration-150 last:border-0;
     }
 
     tr[data-url] {
-      @apply cursor-pointer hover:bg-slate-200;
+      @apply cursor-pointer hover:bg-slate-100;
     }
   }
 

@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/bincyber/go-sqlcrypter"
@@ -91,6 +92,16 @@ func (s *TunnelService) ListTunnelsForUser(ctx context.Context, user *queries.Us
 			Active: s.registry.GetTunnelStatus(row.Subdomain),
 		})
 	}
+
+	slices.SortStableFunc(result, func(a, b *types.TunnelListDTO) int {
+		if a.Active == b.Active {
+			return 0
+		}
+		if a.Active {
+			return -1
+		}
+		return 1
+	})
 
 	return result, nil
 }
